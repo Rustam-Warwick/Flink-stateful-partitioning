@@ -9,4 +9,5 @@ import org.apache.flink.statefun.sdk.FunctionType;
  */
 public class Identifiers {
     public static final FunctionType PART_TYPE = new FunctionType("partitioning", "part");
+    public static final FunctionType PARTITIONER_TYPE = new FunctionType("partitioning", "partitioner");
 }

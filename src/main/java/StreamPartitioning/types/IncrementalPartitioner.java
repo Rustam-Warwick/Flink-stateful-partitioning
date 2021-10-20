@@ -1,7 +1,9 @@
 package StreamPartitioning.types;
 
 
+import org.apache.flink.statefun.flink.datastream.SerializableStatefulFunctionProvider;
 import org.apache.flink.statefun.sdk.Context;
+import org.apache.flink.statefun.sdk.FunctionType;
 import org.apache.flink.statefun.sdk.StatefulFunction;
 import org.apache.flink.statefun.sdk.annotations.Persisted;
 import org.apache.flink.statefun.sdk.state.PersistedValue;
@@ -16,10 +18,10 @@ import org.apache.flink.statefun.sdk.state.PersistedValue;
 
 
 
-abstract public class IncrementalPartitioner<IS,INT> implements StatefulFunction {
+abstract public class IncrementalPartitioner<IS,INT> implements StatefulFunction, SerializableStatefulFunctionProvider {
     @Persisted
     private final PersistedValue<IS> state;
-
+    protected Short K = 10;
     public IncrementalPartitioner(Class <IS> persistedClassType) {
         this.state = PersistedValue.of("state",persistedClassType);
     }
@@ -27,6 +29,7 @@ abstract public class IncrementalPartitioner<IS,INT> implements StatefulFunction
     @Override
     public void invoke(Context context, Object o) {
         GraphQuery input = (GraphQuery) o;
+        System.out.println(input);
         INT updateRegion = this.getUpdateRegion(input);
         String part = this.partition(updateRegion);
         context.send(Identifiers.PART_TYPE,part,input);
