@@ -1,5 +1,5 @@
 plugins {
-    id 'java'
+    id 'application'
 }
 
 group 'org.example'
@@ -9,10 +9,22 @@ repositories {
     mavenCentral()
 }
 
+
+
+application {
+    mainClass = 'StreamPartitioning.StreamPartitioning'
+}
+
 dependencies {
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.7.0'
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.7.0'
-    implementation 'org.apache.flink:statefun-sdk-java:3.1.0'
+    implementation([
+        'org.apache.flink:flink-streaming-java_2.11:1.14.0',
+        'org.apache.flink:flink-clients_2.11:1.14.0',
+        'org.apache.flink:statefun-flink-datastream:3.0.0',
+        'org.apache.flink:statefun-sdk-java:3.0.0'
+
+    ])
 }
 
 test {
