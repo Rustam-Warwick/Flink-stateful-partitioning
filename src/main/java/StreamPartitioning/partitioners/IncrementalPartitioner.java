@@ -1,6 +1,8 @@
-package StreamPartitioning.types;
+package StreamPartitioning.partitioners;
 
 
+import StreamPartitioning.types.GraphQuery;
+import StreamPartitioning.types.Identifiers;
 import org.apache.flink.statefun.flink.datastream.SerializableStatefulFunctionProvider;
 import org.apache.flink.statefun.sdk.Context;
 import org.apache.flink.statefun.sdk.FunctionType;
@@ -12,19 +14,12 @@ import org.apache.flink.statefun.sdk.state.PersistedValue;
  * Generic Inteface for incremental partitioners, from the paper Incrementization of graph partitionin algorithms
  * Abstract class for incremental partitioning algorithms
  * @param <IS> Internal state that the algorithm stores
- * @param <INT> Intermediatry state after receiving the message
+ * @param <INT> Intermediate state after receiving the message
+ *
  *
  */
-
-
-
-abstract public class IncrementalPartitioner<IS,INT> implements StatefulFunction, SerializableStatefulFunctionProvider {
-    @Persisted
-    private final PersistedValue<IS> state;
-    protected Short K = 10;
-    public IncrementalPartitioner(Class <IS> persistedClassType) {
-        this.state = PersistedValue.of("state",persistedClassType);
-    }
+abstract public class IncrementalPartitioner<INT> implements StatefulFunction {
+    public Short PART_SIZE = 10;
 
     @Override
     public void invoke(Context context, Object o) {

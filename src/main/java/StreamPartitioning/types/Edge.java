@@ -4,9 +4,13 @@ package StreamPartitioning.types;
  * Simple weighted Edge implementation
  */
 public class Edge implements GraphElement {
-    private Vertex source;
-    private Vertex destination;
-    private Float weight = 1.0f;
+    public Vertex source;
+    public Vertex destination;
+    public Float weight = 1.0f;
+    public Edge(){
+        this.source = null;
+        this.destination = null;
+    }
 
     @Override
     public String getId() {

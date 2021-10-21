@@ -6,6 +6,10 @@ package StreamPartitioning.types;
 public class Vertex implements GraphElement {
     private String id;
 
+    public Vertex(){
+        this.id = null;
+    }
+
     public Vertex withId(String id){
         this.id = id ;
         return this;

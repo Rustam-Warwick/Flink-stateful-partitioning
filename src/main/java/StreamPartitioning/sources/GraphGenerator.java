@@ -23,6 +23,7 @@ public class GraphGenerator extends RichParallelSourceFunction<GraphQuery> {
         random = new Random();
     }
 
+
     @Override
     public void run(SourceContext<GraphQuery> ctx) throws Exception {
         random.ints(1000,0,1000).forEach(new IntConsumer() {
