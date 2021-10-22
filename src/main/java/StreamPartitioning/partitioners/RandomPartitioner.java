@@ -1,7 +1,7 @@
 package StreamPartitioning.partitioners;
 
-import StreamPartitioning.types.GraphQuery;
-import org.apache.flink.statefun.sdk.state.PersistedValue;
+import StreamPartitioning.types.UserQuery;
+
 import java.util.Random;
 
 
@@ -23,7 +23,7 @@ public class RandomPartitioner extends IncrementalPartitioner<String> {
     }
 
     @Override
-    public String getUpdateRegion(GraphQuery input) {
+    public String getUpdateRegion(UserQuery input) {
         return null;
     }
 }

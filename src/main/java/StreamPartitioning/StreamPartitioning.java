@@ -1,7 +1,7 @@
 package StreamPartitioning;
 
 import StreamPartitioning.sources.GraphGenerator;
-import StreamPartitioning.types.GraphQuery;
+import StreamPartitioning.types.UserQuery;
 import StreamPartitioning.types.Identifiers;
 import StreamPartitioning.partitioners.PartitionerProvider;
 import org.apache.flink.api.common.typeinfo.Types;
@@ -20,7 +20,7 @@ import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 public class StreamPartitioning {
     public static void main(String[] args) throws Exception {
         final StreamExecutionEnvironment env = StreamExecutionEnvironment.createLocalEnvironment();
-        DataStream<GraphQuery> stream = env.addSource(new GraphGenerator()).returns(Types.POJO(GraphQuery.class));
+        DataStream<UserQuery> stream = env.addSource(new GraphGenerator()).returns(Types.POJO(UserQuery.class));
 
         DataStream<RoutableMessage> ingress = stream.map(graphElement->
            RoutableMessageBuilder
@@ -40,7 +40,7 @@ public class StreamPartitioning {
         StatefulFunctionEgressStreams res = StatefulFunctionDataStreamBuilder
                 .builder("partitioning")
                 .withDataStreamAsIngress(ingress)
-                .withFunctionProvider(Identifiers.PARTITIONER_TYPE,new PartitionerProvider())
+
                 .withConfiguration(config)
                 .build(env);
 

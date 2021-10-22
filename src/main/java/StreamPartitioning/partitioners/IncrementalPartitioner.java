@@ -1,14 +1,10 @@
 package StreamPartitioning.partitioners;
 
 
-import StreamPartitioning.types.GraphQuery;
+import StreamPartitioning.types.UserQuery;
 import StreamPartitioning.types.Identifiers;
-import org.apache.flink.statefun.flink.datastream.SerializableStatefulFunctionProvider;
 import org.apache.flink.statefun.sdk.Context;
-import org.apache.flink.statefun.sdk.FunctionType;
 import org.apache.flink.statefun.sdk.StatefulFunction;
-import org.apache.flink.statefun.sdk.annotations.Persisted;
-import org.apache.flink.statefun.sdk.state.PersistedValue;
 
 /**
  * Generic Inteface for incremental partitioners, from the paper Incrementization of graph partitionin algorithms
@@ -23,7 +19,7 @@ abstract public class IncrementalPartitioner<INT> implements StatefulFunction {
 
     @Override
     public void invoke(Context context, Object o) {
-        GraphQuery input = (GraphQuery) o;
+        UserQuery input = (UserQuery) o;
         System.out.println(input);
         INT updateRegion = this.getUpdateRegion(input);
         String part = this.partition(updateRegion);
@@ -31,6 +27,6 @@ abstract public class IncrementalPartitioner<INT> implements StatefulFunction {
     }
 
     abstract public String partition(INT scope);
-    abstract public INT getUpdateRegion(GraphQuery input);
+    abstract public INT getUpdateRegion(UserQuery input);
 
 }

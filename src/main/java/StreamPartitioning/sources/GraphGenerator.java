@@ -1,7 +1,7 @@
 package StreamPartitioning.sources;
 
 import StreamPartitioning.types.Edge;
-import StreamPartitioning.types.GraphQuery;
+import StreamPartitioning.types.UserQuery;
 import StreamPartitioning.types.QueryOperation;
 import StreamPartitioning.types.Vertex;
 import org.apache.flink.configuration.Configuration;
@@ -14,7 +14,7 @@ import java.util.function.IntConsumer;
  * Responsible for fake graph generation.
  * Streaming Edges for a directed graph to be consumed by the main partitioner
  */
-public class GraphGenerator extends RichParallelSourceFunction<GraphQuery> {
+public class GraphGenerator extends RichParallelSourceFunction<UserQuery> {
     private Random random;
     private volatile boolean isRunning = true;
     @Override
@@ -25,7 +25,7 @@ public class GraphGenerator extends RichParallelSourceFunction<GraphQuery> {
 
 
     @Override
-    public void run(SourceContext<GraphQuery> ctx) throws Exception {
+    public void run(SourceContext<UserQuery> ctx) throws Exception {
         random.ints(1000,0,1000).forEach(new IntConsumer() {
             String srcId = null;
             @Override
@@ -40,7 +40,7 @@ public class GraphGenerator extends RichParallelSourceFunction<GraphQuery> {
                     Vertex source = new Vertex().withId(srcId);
                     Vertex dest = new Vertex().withId(String.valueOf(value));
                     Edge edge = new Edge().betweenVertices(source,dest);
-                    GraphQuery query = new GraphQuery(edge).changeOperation(QueryOperation.ADD);
+                    UserQuery query = new UserQuery(edge).changeOperation(QueryOperation.ADD);
                     ctx.collect(query);
                     this.srcId = null;
                 }
