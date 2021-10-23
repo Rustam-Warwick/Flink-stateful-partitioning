@@ -1,29 +1,28 @@
 package StreamPartitioning.partitioners;
 
+import StreamPartitioning.types.Identifiers;
 import StreamPartitioning.types.UserQuery;
+import org.apache.flink.statefun.sdk.Context;
+import org.apache.flink.statefun.sdk.match.MatchBinder;
 
 import java.util.Random;
 
 
-public class RandomPartitioner extends IncrementalPartitioner<String> {
+public class RandomPartitioner extends BasePartitioner{
     public Random random;
 
     public RandomPartitioner(){
         random = new Random();
     }
-    public RandomPartitioner(Short K){
-        this();
-        this.PART_SIZE = K;
-    }
 
     @Override
-    public String partition(String scope) {
-        // Random partitioning
-        return String.valueOf(random.nextInt(this.PART_SIZE));
+    public void configure(MatchBinder matchBinder) {
+        matchBinder.predicate(UserQuery.class,this::partition);
     }
 
-    @Override
-    public String getUpdateRegion(UserQuery input) {
-        return null;
+
+    public void partition(Context c, UserQuery query){
+        String partId = String.valueOf(random.nextInt(this.NUM_PARTS));
+        c.send(Identifiers.PART_TYPE,partId,query);
     }
 }

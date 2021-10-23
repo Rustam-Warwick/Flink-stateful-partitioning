@@ -17,7 +17,12 @@ public class Edge implements GraphElement {
         return this.source.getId();
     }
 
-    public Edge betweenVertices(Vertex source,Vertex destination) {
+    @Override
+    public boolean equals(GraphElement e) {
+        return getId()==e.getId();
+    }
+
+    public Edge betweenVertices(Vertex source, Vertex destination) {
         this.source = source;
         this.destination = destination;
         return this;

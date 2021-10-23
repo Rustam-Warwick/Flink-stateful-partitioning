@@ -4,6 +4,9 @@ import org.apache.flink.configuration.Configuration;
 import org.apache.flink.streaming.api.functions.source.RichParallelSourceFunction;
 import java.util.Random;
 
+/**
+ * Dummy String Generator. Serves no purpose!
+ */
 public class StringGenerator extends RichParallelSourceFunction<String> {
     public Random random;
     public volatile boolean isRunning = true;

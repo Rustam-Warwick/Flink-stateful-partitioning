@@ -2,7 +2,6 @@ package StreamPartitioning.sources;
 
 import StreamPartitioning.types.Edge;
 import StreamPartitioning.types.UserQuery;
-import StreamPartitioning.types.QueryOperation;
 import StreamPartitioning.types.Vertex;
 import org.apache.flink.configuration.Configuration;
 import org.apache.flink.streaming.api.functions.source.RichParallelSourceFunction;
@@ -40,7 +39,7 @@ public class GraphGenerator extends RichParallelSourceFunction<UserQuery> {
                     Vertex source = new Vertex().withId(srcId);
                     Vertex dest = new Vertex().withId(String.valueOf(value));
                     Edge edge = new Edge().betweenVertices(source,dest);
-                    UserQuery query = new UserQuery(edge).changeOperation(QueryOperation.ADD);
+                    UserQuery query = new UserQuery(edge).changeOperation(UserQuery.OPERATORS.ADD);
                     ctx.collect(query);
                     this.srcId = null;
                 }

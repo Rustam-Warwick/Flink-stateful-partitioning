@@ -19,4 +19,10 @@ public class Vertex implements GraphElement {
     public String getId() {
         return id;
     }
+
+    @Override
+    public boolean equals(GraphElement e) {
+        return getId()==e.getId();
+    }
+
 }

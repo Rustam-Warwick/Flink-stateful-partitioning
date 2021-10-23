@@ -9,10 +9,10 @@ package StreamPartitioning.types;
  * @// TODO: 20.10.21 Can there be queries for vertices only or edges only? Maybe 2 separate sub classes. VertexQuery, EdgeQuery?
  */
 public class UserQuery {
-    public GraphElement element; // Element over which we are querying
-    public QueryOperation op = QueryOperation.NONE; // What we want to modify in partitions
-    public QueryResult res = QueryResult.NONE; // What should be the result of our modification, that is streamed down the pipeline
+    public enum OPERATORS {NONE, ADD, REMOVE,UPDATE}
 
+    public GraphElement element; // Element over which we are querying
+    public OPERATORS op = OPERATORS.NONE;
     public UserQuery(){
         this.element = null;
     }
@@ -21,14 +21,8 @@ public class UserQuery {
         this.element = element;
     }
 
-
-    public UserQuery changeOperation(QueryOperation op){
+    public UserQuery changeOperation(OPERATORS op){
         this.op = op;
-        return this;
-    }
-
-    public UserQuery changeResult(QueryResult res){
-        this.res = res;
         return this;
     }
 }
