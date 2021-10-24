@@ -19,7 +19,12 @@ import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import java.io.OutputStream;
 
 /**
- * @// TODO: 21/10/2021 Introduce new Types for input. UserQuery, GraphQuery and etc.
+ * @// TODO: 21/10/2021 Introduce new Types for input. UserQuery, GraphQuery and etc. #done
+ * @// TODO: 24.10.21 Add LDG Streaming Partitioning #done
+ * @// TODO: 24.10.21  Add Operators interface for the Parts. Operators can send data to egreeses. Customly
+ * @// TODO: 24.10.21 L-Hop Aggregator Interface
+ * @// TODO: 24.10.21 Graph Partitioning anaylis operator. Edge-cut, Balance Ration and etc.
+ * @// TODO: 24.10.21 Think about interfacing and software architecture. Subscribe model for operators? Or dependency injection kinda?
  */
 public class StreamPartitioning {
     public static void main(String[] args) throws Exception {
@@ -47,7 +52,6 @@ public class StreamPartitioning {
                 .build(env);
 
 
-        System.out.println(env.getExecutionPlan());
         env.execute();
 
 
