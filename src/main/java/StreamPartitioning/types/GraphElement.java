@@ -8,6 +8,7 @@ package StreamPartitioning.types;
 public interface GraphElement{
 
     String getId();
+    Integer getPartId();
     boolean equals(GraphElement e);
 
 }

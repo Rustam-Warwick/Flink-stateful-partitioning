@@ -5,6 +5,7 @@ import StreamPartitioning.types.UserQuery;
 import StreamPartitioning.types.Vertex;
 import org.apache.flink.configuration.Configuration;
 import org.apache.flink.streaming.api.functions.source.RichParallelSourceFunction;
+import scala.Tuple2;
 
 import java.util.Random;
 import java.util.function.IntConsumer;
@@ -36,15 +37,20 @@ public class GraphGenerator extends RichParallelSourceFunction<UserQuery> {
                 }
                 else{
                     // Add as the source
-                    Vertex source = new Vertex().withId(srcId);
-                    Vertex dest = new Vertex().withId(String.valueOf(value));
-                    Edge edge = new Edge().betweenVertices(source,dest);
+                    Tuple2<String,Integer> src = new Tuple2<String,Integer>(srcId,null);
+                    Tuple2<String,Integer> dest = new Tuple2<String,Integer>(String.valueOf(value),null);
+                    Edge edge = new Edge().betweenVertices(src,dest);
                     UserQuery query = new UserQuery(edge).changeOperation(UserQuery.OPERATORS.ADD);
+                    System.out.format("Sourcing (%s,%s)\n",srcId,value);
                     ctx.collect(query);
                     this.srcId = null;
                 }
             }
         });
+
+        while(isRunning){
+            // This part is needed since the jobs will close once this source function returns
+        }
     }
 
     @Override

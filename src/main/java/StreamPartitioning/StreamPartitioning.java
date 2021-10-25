@@ -1,5 +1,6 @@
 package StreamPartitioning;
 
+import StreamPartitioning.partitioners.LDGStreamingPartitioner;
 import StreamPartitioning.partitioners.RandomPartitioner;
 import StreamPartitioning.parts.SimpleStoragePart;
 import StreamPartitioning.sources.GraphGenerator;
@@ -21,6 +22,7 @@ import java.io.OutputStream;
 /**
  * @// TODO: 21/10/2021 Introduce new Types for input. UserQuery, GraphQuery and etc. #done
  * @// TODO: 24.10.21 Add LDG Streaming Partitioning #done
+ * @// TODO: 25/10/2021 Add notification to already existing partitions, when destination vertex comes in
  * @// TODO: 24.10.21  Add Operators interface for the Parts. Operators can send data to egreeses. Customly
  * @// TODO: 24.10.21 L-Hop Aggregator Interface
  * @// TODO: 24.10.21 Graph Partitioning anaylis operator. Edge-cut, Balance Ration and etc.
@@ -39,6 +41,7 @@ public class StreamPartitioning {
                    .build()
         );
 
+
         StatefulFunctionsConfig config = StatefulFunctionsConfig.fromEnvironment(env);
 
         config.setFactoryType(MessageFactoryType.WITH_KRYO_PAYLOADS);
@@ -46,8 +49,8 @@ public class StreamPartitioning {
         StatefulFunctionEgressStreams res = StatefulFunctionDataStreamBuilder
                 .builder("partitioning")
                 .withDataStreamAsIngress(ingress)
-                .withFunctionProvider(Identifiers.PART_TYPE,(param)->new RandomPartitioner().setNUM_PARTS((short)8))
-                .withFunctionProvider(Identifiers.PARTITIONER_TYPE,(param)->new SimpleStoragePart().setStorage(new HashMapGraphStorage()))
+                .withFunctionProvider(Identifiers.PARTITIONER_TYPE,(param)->new LDGStreamingPartitioner().setNUM_PARTS((short)8))
+                .withFunctionProvider(Identifiers.PART_TYPE,(param)->new SimpleStoragePart().setStorage(new HashMapGraphStorage()))
                 .withConfiguration(config)
                 .build(env);
 

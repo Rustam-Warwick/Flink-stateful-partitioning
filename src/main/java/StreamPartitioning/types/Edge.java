@@ -1,20 +1,21 @@
 package StreamPartitioning.types;
 
+import scala.Tuple2;
+
 /**
  * Simple weighted Edge implementation
+ * Soure,Dest -> (Vertex Id, Part Id)
  */
 public class Edge implements GraphElement {
-    public Vertex source;
-    public Vertex destination;
+    public Tuple2<String,Integer> source = null;
+    public Tuple2<String,Integer> destination = null;
     public Float weight = 1.0f;
-    public Edge(){
-        this.source = null;
-        this.destination = null;
-    }
+    public Integer inPart = null;
+
 
     @Override
     public String getId() {
-        return this.source.getId();
+        return this.source._1;
     }
 
     @Override
@@ -22,7 +23,12 @@ public class Edge implements GraphElement {
         return getId()==e.getId();
     }
 
-    public Edge betweenVertices(Vertex source, Vertex destination) {
+    @Override
+    public Integer getPartId() {
+        return inPart;
+    }
+
+    public Edge betweenVertices(Tuple2<String,Integer> source, Tuple2<String,Integer> destination) {
         this.source = source;
         this.destination = destination;
         return this;
