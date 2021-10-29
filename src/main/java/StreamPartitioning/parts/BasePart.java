@@ -17,10 +17,17 @@ import java.util.concurrent.CompletableFuture;
  */
 abstract public class BasePart implements StatefulFunction {
     GraphStorage storage = null;
-    ArrayList<BaseAggregator> aggFunctions;
-    public BasePart(){
-        aggFunctions = new ArrayList<>();
+    ArrayList<BaseAggregator> aggFunctions = new ArrayList<>();
+
+    public BasePart attachAggregator(BaseAggregator e){
+        aggFunctions.add(e);
+        e.attachedTo(this);
+        return this;
     }
+    public void detachAggregator(BaseAggregator e){
+        aggFunctions.remove(e);
+    }
+
     public BasePart setStorage(GraphStorage storage) {
         this.storage = storage;
         return this;

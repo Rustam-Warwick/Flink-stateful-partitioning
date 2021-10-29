@@ -1,5 +1,6 @@
 package StreamPartitioning.parts;
 
+import StreamPartitioning.aggregators.PartitionReportingAggregator.PartitionReportingAggregator;
 import StreamPartitioning.types.Edge;
 import StreamPartitioning.types.UserQuery;
 import StreamPartitioning.types.Vertex;
@@ -22,7 +23,6 @@ public class SimpleStoragePart extends BasePart{
 
     @Override
     public void invoke(Context context, Object msg) {
-        
         // 1. Check if this Part should do something. Mainly about CRUD operations
         if(msg instanceof UserQuery){
 
@@ -36,7 +36,10 @@ public class SimpleStoragePart extends BasePart{
                     if (isVertex) getStorage().addVertex((Vertex) query.element);
                     else getStorage().addEdge((Edge) query.element);
                 }
-                case UPDATE -> System.out.println("Update Operation");
+                case UPDATE -> {
+                    if (isVertex) getStorage().updateVertex((Vertex) query.element);
+                    else getStorage().updateEdge((Edge) query.element);
+                }
                 case REMOVE -> System.out.println("Remove Operation");
                 default -> System.out.println("Undefined Operation");
             }
@@ -44,7 +47,7 @@ public class SimpleStoragePart extends BasePart{
         // Check if there is any aggregator responsible for this guy
         // If there is call its dispatch method
         aggFunctions.forEach((fn)->{
-            if(fn.isTypeAccepted(msg))fn.dispatch(context,msg);
+            if(fn.shouldTrigger(msg))fn.dispatch(context,msg);
         });
 
     }

@@ -7,6 +7,8 @@ import scala.Tuple2;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.function.Predicate;
+import java.util.stream.Stream;
 
 /**
  * HashMap Based Vertex-Centric graph storage
@@ -15,22 +17,22 @@ public class HashMapGraphStorage implements GraphStorage {
     /**
      * Stores Edges as a map of (source_key=>(dest_key))
      */
-    HashMap<String, ArrayList<String>> edges;
+    public HashMap<String, ArrayList<String>> edges;
     /**
      * Stores Vertex hashed by source id. Good for O(1) search
      * Note that dest vertices are stored here as well with the isPart attribute set to something else
      */
-    HashMap<String, Vertex> vertices;
+    public HashMap<String, Vertex> vertices;
 
     public HashMapGraphStorage() {
         edges = new HashMap<>();
         vertices = new HashMap<>();
     }
 
-
     @Override
     public void addVertex(Vertex v) {
-        if(v.getPartId()==null)v.inPart(-1); // Indicating that vertex is not remote and actually came to this partition
+        // If vertex is already here then discard it
+        if(vertices.containsKey(v.getId()))return;
         vertices.put(v.getId(),v);
     }
 
@@ -41,22 +43,25 @@ public class HashMapGraphStorage implements GraphStorage {
 
     @Override
     public void updateVertex(Vertex v) {
-
+        // 1. If vertex DNE simply discard it???
+        if(!vertices.containsKey(v.getId()))return;
+        // 3. Replace the old vertex with this one
+        vertices.put(v.getId(),v);
     }
 
     @Override
     public void addEdge(Edge e) {
-        // 1. If source vertex not in storage create a placeholder object
-        if(!vertices.containsKey(e.source._1)){
-            vertices.put(e.source._1,new Vertex().withId(e.source._1)); // Don't touch the part since it will be changed once vertex arrives
+        // 1. If source vertex not in storage create it
+        if(!vertices.containsKey(e.source.getId())){
+            vertices.put(e.source.getId(),e.source);
         }
-        // 2. Same for destination
-        if(!vertices.containsKey(e.destination._1)){
-            vertices.put(e.destination._1,new Vertex().withId(e.destination._1).inPart(e.destination._2));
+        // 2. Do same for destination
+        if(!vertices.containsKey(e.destination.getId())){
+            vertices.put(e.destination.getId(),e.destination);
         }
         // 3. Put the edge to the edge list
-        edges.putIfAbsent(e.source._1,new ArrayList<>());
-        edges.get(e.source._1).add(e.destination._1);
+        edges.putIfAbsent(e.source.getId(),new ArrayList<>());
+        edges.get(e.source.getId()).add(e.destination.getId());
 
     }
 
@@ -67,6 +72,22 @@ public class HashMapGraphStorage implements GraphStorage {
 
     @Override
     public void updateEdge(Edge e) {
+        // Meaningless until we have edge features
 
+    }
+
+    @Override
+    public Stream<Vertex> getVertices() {
+        return vertices.values().stream();
+    }
+
+    @Override
+    public Stream<Edge> getEdges() {
+        return edges.entrySet().stream().flatMap((item)->(
+            item
+            .getValue()
+            .stream()
+            .map(a->new Edge()))
+            );
     }
 }

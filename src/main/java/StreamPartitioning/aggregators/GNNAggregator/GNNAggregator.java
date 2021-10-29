@@ -1,16 +1,18 @@
 package StreamPartitioning.aggregators.GNNAggregator;
 
 import StreamPartitioning.aggregators.BaseAggregator;
+import StreamPartitioning.parts.BasePart;
 import StreamPartitioning.types.Edge;
 import StreamPartitioning.types.UserQuery;
 import StreamPartitioning.types.Vertex;
 import org.apache.flink.statefun.sdk.Context;
+import org.apache.flink.statefun.sdk.io.EgressIdentifier;
 
 /**
  * Flexible GNN Aggregation function.
  *
  */
-public class GNNAggregator implements BaseAggregator {
+public class GNNAggregator extends BaseAggregator {
     public Class[] acceptedTypes = new Class[]{UserQuery.class};
 
     public int L = 2;
@@ -20,8 +22,11 @@ public class GNNAggregator implements BaseAggregator {
         return this;
     }
 
+
+
+
     @Override
-    public boolean isTypeAccepted(Object e) {
+    public boolean shouldTrigger(Object e) {
         Class originalClass = e.getClass();
         for(var i=0;i<acceptedTypes.length;i++){
             if(originalClass.equals(acceptedTypes[i]))return true;

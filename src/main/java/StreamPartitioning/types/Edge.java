@@ -7,15 +7,16 @@ import scala.Tuple2;
  * Soure,Dest -> (Vertex Id, Part Id)
  */
 public class Edge implements GraphElement {
-    public Tuple2<String,Integer> source = null;
-    public Tuple2<String,Integer> destination = null;
+    public Vertex source = null;
+    public Vertex destination = null;
+
     public Float weight = 1.0f;
     public Integer inPart = null;
 
 
     @Override
     public String getId() {
-        return this.source._1;
+        return this.source.getId();
     }
 
     @Override
@@ -23,12 +24,8 @@ public class Edge implements GraphElement {
         return getId()==e.getId();
     }
 
-    @Override
-    public Integer getPartId() {
-        return inPart;
-    }
 
-    public Edge betweenVertices(Tuple2<String,Integer> source, Tuple2<String,Integer> destination) {
+    public Edge betweenVertices(Vertex source, Vertex destination) {
         this.source = source;
         this.destination = destination;
         return this;

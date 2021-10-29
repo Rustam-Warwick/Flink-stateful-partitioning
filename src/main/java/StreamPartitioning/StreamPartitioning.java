@@ -1,7 +1,7 @@
 package StreamPartitioning;
 
-import StreamPartitioning.partitioners.LDGStreamingPartitioner;
-import StreamPartitioning.partitioners.RandomPartitioner;
+import StreamPartitioning.aggregators.PartitionReportingAggregator.PartitionReportingAggregator;
+import StreamPartitioning.partitioners.RandomVertexCutPartitioner;
 import StreamPartitioning.parts.SimpleStoragePart;
 import StreamPartitioning.sources.GraphGenerator;
 import StreamPartitioning.storage.HashMapGraphStorage;
@@ -17,20 +17,19 @@ import org.apache.flink.statefun.flink.datastream.StatefulFunctionEgressStreams;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 
-import java.io.OutputStream;
-
 /**
- * @// TODO: 21/10/2021 Introduce new Types for input. UserQuery, GraphQuery and etc. #done
- * @// TODO: 24.10.21 Add LDG Streaming Partitioning #done
- * @// TODO: 25/10/2021 Add notification to already existing partitions, when destination vertex comes in
- * @// TODO: 24.10.21  Add Operators interface for the Parts. Operators can send data to egreeses. Customly
- * @// TODO: 24.10.21 L-Hop Aggregator Interface
- * @// TODO: 24.10.21 Graph Partitioning anaylis operator. Edge-cut, Balance Ration and etc.
- * @// TODO: 24.10.21 Think about interfacing and software architecture. Subscribe model for operators? Or dependency injection kinda?
+ * @// TODO: 29/10/2021 Vertex-cut partitioning
+ * @// TODO: 29/10/2021 Implements push based streaming GNN-algorithm
+ * @// TODO: 29/10/2021 Implements serveral HDRF like algorithms
+ * @// TODO: 29/10/2021 Test and think about data consistnecy
  */
 public class StreamPartitioning {
     public static void main(String[] args) throws Exception {
         final StreamExecutionEnvironment env = StreamExecutionEnvironment.createLocalEnvironment();
+        env.getConfig().disableClosureCleaner();
+        StatefulFunctionsConfig config = StatefulFunctionsConfig.fromEnvironment(env);
+        config.setFactoryType(MessageFactoryType.WITH_KRYO_PAYLOADS);
+
         DataStream<UserQuery> stream = env.addSource(new GraphGenerator()).returns(Types.POJO(UserQuery.class));
 
         DataStream<RoutableMessage> ingress = stream.map(graphElement->
@@ -42,17 +41,21 @@ public class StreamPartitioning {
         );
 
 
-        StatefulFunctionsConfig config = StatefulFunctionsConfig.fromEnvironment(env);
-
-        config.setFactoryType(MessageFactoryType.WITH_KRYO_PAYLOADS);
-
         StatefulFunctionEgressStreams res = StatefulFunctionDataStreamBuilder
                 .builder("partitioning")
                 .withDataStreamAsIngress(ingress)
-                .withFunctionProvider(Identifiers.PARTITIONER_TYPE,(param)->new LDGStreamingPartitioner().setNUM_PARTS((short)8))
-                .withFunctionProvider(Identifiers.PART_TYPE,(param)->new SimpleStoragePart().setStorage(new HashMapGraphStorage()))
+                .withFunctionProvider(Identifiers.PARTITIONER_TYPE,(param)->new RandomVertexCutPartitioner().setNUM_PARTS((short)8))
+                .withFunctionProvider(Identifiers.PART_TYPE,(param)->
+                        new SimpleStoragePart()
+                                .setStorage(new HashMapGraphStorage())
+                                )
                 .withConfiguration(config)
+                .withEgressId(PartitionReportingAggregator.egress)
                 .build(env);
+
+        DataStream<String> greetingsEgress = res.getDataStreamForEgressId(PartitionReportingAggregator.egress);
+        greetingsEgress.print();
+
 
 
         env.execute();
