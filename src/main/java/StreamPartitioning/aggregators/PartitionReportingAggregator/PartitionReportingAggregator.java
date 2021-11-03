@@ -1,13 +1,8 @@
 package StreamPartitioning.aggregators.PartitionReportingAggregator;
 
 import StreamPartitioning.aggregators.BaseAggregator;
-import StreamPartitioning.parts.BasePart;
-import StreamPartitioning.types.Vertex;
 import org.apache.flink.statefun.sdk.Context;
 import org.apache.flink.statefun.sdk.io.EgressIdentifier;
-
-import java.util.Set;
-import java.util.stream.Collectors;
 
 public class PartitionReportingAggregator extends BaseAggregator {
     public static final EgressIdentifier<String> egress = new EgressIdentifier<>("partitioning", "reporting", String.class);

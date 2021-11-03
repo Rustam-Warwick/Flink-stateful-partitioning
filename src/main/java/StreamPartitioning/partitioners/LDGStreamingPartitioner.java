@@ -1,14 +1,5 @@
 package StreamPartitioning.partitioners;
 
-import StreamPartitioning.types.Edge;
-import StreamPartitioning.types.Identifiers;
-import StreamPartitioning.types.UserQuery;
-import StreamPartitioning.types.Vertex;
-import org.apache.flink.statefun.sdk.Context;
-import org.apache.flink.statefun.sdk.match.MatchBinder;
-
-import java.util.HashMap;
-
 
 /**
  * LDG Paper based, Edge-cut, Streaming, Graph Partitioning Aglorithm.

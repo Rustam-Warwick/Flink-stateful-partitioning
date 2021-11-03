@@ -2,10 +2,10 @@ package StreamPartitioning.sources;
 
 import StreamPartitioning.types.Edge;
 import StreamPartitioning.types.UserQuery;
-import StreamPartitioning.types.Vertex;
+import StreamPartitioning.vertex.BaseReplicatedVertex;
+import StreamPartitioning.vertex.Vertex;
 import org.apache.flink.configuration.Configuration;
 import org.apache.flink.streaming.api.functions.source.RichParallelSourceFunction;
-import scala.Tuple2;
 
 import java.util.Random;
 import java.util.function.IntConsumer;
@@ -23,7 +23,7 @@ public class GraphGenerator extends RichParallelSourceFunction<UserQuery> {
     public void open(Configuration parameters) throws Exception {
         super.open(parameters);
         random = new Random();
-        this.N = 100;
+        this.N = 10;
         this.D  = 5;
 
     }
@@ -52,8 +52,8 @@ public class GraphGenerator extends RichParallelSourceFunction<UserQuery> {
                 }
                 else{
                     // 1. Add as the source
-                    Vertex src = new Vertex().withId(String.valueOf(srcId));
-                    Vertex dest = new Vertex().withId(String.valueOf(value));
+                    BaseReplicatedVertex src = new Vertex().withId(String.valueOf(srcId));
+                    BaseReplicatedVertex dest = new Vertex().withId(String.valueOf(value));
                     Edge edge = new Edge().betweenVertices(src,dest);
                     UserQuery query = new UserQuery(edge).changeOperation(UserQuery.OPERATORS.ADD);
                     ctx.collect(query);

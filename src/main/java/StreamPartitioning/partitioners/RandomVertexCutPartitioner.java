@@ -3,6 +3,7 @@ package StreamPartitioning.partitioners;
 import StreamPartitioning.types.Edge;
 import StreamPartitioning.types.Identifiers;
 import StreamPartitioning.types.UserQuery;
+import StreamPartitioning.vertex.BaseReplicatedVertex;
 import org.apache.flink.statefun.sdk.Context;
 import org.apache.flink.statefun.sdk.match.MatchBinder;
 
@@ -16,11 +17,10 @@ import java.util.stream.Stream;
  * Randomly select a part from the vertex list
  *
  */
-public class RandomVertexCutPartitioner extends BasePartitioner{
+public class RandomVertexCutPartitioner<VT extends BaseReplicatedVertex> extends BasePartitioner{
     public Random random;
 
-    public HashMap<String, ArrayList<Short>> inParts = new HashMap<>(); // Parts where vertex has in-neighbors
-    public HashMap<String, ArrayList<Short>> outParts = new HashMap<>(); // Parts where vertex has in-neighbors
+    public HashMap<String,Short> masterVertexPart = new HashMap<>();
 
     public RandomVertexCutPartitioner(){
         random = new Random();
@@ -30,21 +30,29 @@ public class RandomVertexCutPartitioner extends BasePartitioner{
     public void configure(MatchBinder matchBinder) {
         matchBinder.predicate(UserQuery.class,this::partition);
     }
-
     public void newEdge(Context c, UserQuery query,Short partId){
-        Edge tmp = (Edge)query.element;
-        inParts.putIfAbsent(tmp.destination.getId(),new ArrayList<>());
-        outParts.putIfAbsent(tmp.source.getId(),new ArrayList<>());
-        inParts.get(tmp.destination.getId()).add(partId);
-        outParts.get(tmp.source.getId()).add(partId);
-        // 3. Update the vertex info in the Edge
-        tmp.source.outParts = outParts.get(tmp.source.getId());
-        tmp.destination.inParts = inParts.get(tmp.destination.getId());
-        // 4. Update the source vertex in all partitions,
-        UserQuery sourceUpdate = new UserQuery(tmp.source).changeOperation(UserQuery.OPERATORS.UPDATE);
-        UserQuery destUpdate = new UserQuery(tmp.destination).changeOperation(UserQuery.OPERATORS.UPDATE);
-        Stream.concat(tmp.source.inParts.stream(),tmp.source.outParts.stream()).distinct().forEach(item->c.send(Identifiers.PART_TYPE,item.toString(),sourceUpdate));
-        Stream.concat(tmp.destination.inParts.stream(),tmp.destination.outParts.stream()).distinct().forEach(item->c.send(Identifiers.PART_TYPE,item.toString(),destUpdate));
+        Edge<VT> newEdge = (Edge<VT>) query.element;
+        //1. Add this part to out and in parts of the vertices
+        newEdge.source.outParts.add(partId);
+        newEdge.destination.inParts.add(partId);
+        newEdge.source.part = partId;
+        newEdge.destination.part = partId;
+
+        // 2. Resolve the Master Vertices
+        if(masterVertexPart.containsKey(newEdge.source.getId())){
+            // This vertex has been placed before
+            // Is the placed master part different from this one
+            if(masterVertexPart.get(newEdge.source.getId())!=partId)newEdge.source.withMasterId(masterVertexPart.get(newEdge.source.getId()));
+        }else{
+            // this is the master vertex it is here for the first time
+            masterVertexPart.put(newEdge.source.getId(),partId);
+        }
+        // 3. Same as step 2
+        if(masterVertexPart.containsKey(newEdge.destination.getId())){
+            if(masterVertexPart.get(newEdge.destination.getId())!=partId)newEdge.destination.withMasterId(masterVertexPart.get(newEdge.destination.getId()));
+        }else{
+            masterVertexPart.put(newEdge.destination.getId(),partId);
+        }
     }
 
     public void partition(Context c, UserQuery query){
@@ -53,11 +61,11 @@ public class RandomVertexCutPartitioner extends BasePartitioner{
         // 2. Handle Edge addition logic
         if(query.element instanceof Edge){
             newEdge(c,query,partId);
+            Edge<VT> tmp = (Edge<VT>) query.element;
+            System.out.format("Sending (%s,%s) to partition:%s \n",tmp.source.getId(),tmp.destination.getId(),partId);
         }
+
         c.send(Identifiers.PART_TYPE,String.valueOf(partId),query);
-
-
-
 
     }
 }

@@ -1,18 +1,26 @@
 package StreamPartitioning.types;
 
-import scala.Tuple2;
+import StreamPartitioning.vertex.BaseReplicatedVertex;
+import StreamPartitioning.vertex.Vertex;
 
 /**
  * Simple weighted Edge implementation
  * Soure,Dest -> (Vertex Id, Part Id)
  */
-public class Edge implements GraphElement {
-    public Vertex source = null;
-    public Vertex destination = null;
-
+public class Edge<VT extends BaseReplicatedVertex> implements GraphElement {
+    public VT source = null;
+    public VT destination = null;
     public Float weight = 1.0f;
-    public Integer inPart = null;
 
+    @Override
+    public Short getPart() {
+        return null;
+    }
+
+    @Override
+    public Object getFeature(Short l) {
+        return 0;
+    }
 
     @Override
     public String getId() {
@@ -25,7 +33,7 @@ public class Edge implements GraphElement {
     }
 
 
-    public Edge betweenVertices(Vertex source, Vertex destination) {
+    public Edge betweenVertices(VT source, VT destination) {
         this.source = source;
         this.destination = destination;
         return this;

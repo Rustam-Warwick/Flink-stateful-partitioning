@@ -1,17 +1,12 @@
 package StreamPartitioning.parts;
 
-import StreamPartitioning.aggregators.PartitionReportingAggregator.PartitionReportingAggregator;
 import StreamPartitioning.types.Edge;
 import StreamPartitioning.types.UserQuery;
-import StreamPartitioning.types.Vertex;
+import StreamPartitioning.vertex.BaseReplicatedVertex;
 import org.apache.flink.statefun.sdk.Context;
-import org.apache.flink.statefun.sdk.java.message.Message;
-import org.apache.flink.statefun.sdk.match.MatchBinder;
-
-import java.util.concurrent.CompletableFuture;
 
 /**
- * Simple Stores the message in the available storage back-end
+ * Simple Stores the message in the available storage back-end. Only works for vertex-cut operations
  */
 public class SimpleStoragePart extends BasePart{
 
@@ -24,20 +19,28 @@ public class SimpleStoragePart extends BasePart{
     @Override
     public void invoke(Context context, Object msg) {
         // 1. Check if this Part should do something. Mainly about CRUD operations
+        System.out.println("Message Arrived");
         if(msg instanceof UserQuery){
 
             UserQuery query = (UserQuery)msg;
-            boolean isVertex = query.element instanceof Vertex;
+            boolean isVertex = query.element instanceof BaseReplicatedVertex;
             boolean isEdge = query.element instanceof Edge;
             if(!isVertex && !isEdge) throw new UnsupportedOperationException("Input Stream Element can be of type (Vertex | Edge)");
-
             switch (query.op){
                 case ADD -> {
-                    if (isVertex) getStorage().addVertex((Vertex) query.element);
-                    else getStorage().addEdge((Edge) query.element);
+                    if (isEdge){
+                        Edge tmp  = (Edge) query.element;
+                        getStorage().addEdge(tmp);
+                        getStorage().getVertex(tmp.source.getId()).updateMaster(context);
+                        getStorage().getVertex(tmp.destination.getId()).updateMaster(context);
+                    }
                 }
                 case UPDATE -> {
-                    if (isVertex) getStorage().updateVertex((Vertex) query.element);
+                    if (isVertex) {
+                        BaseReplicatedVertex incoming = (BaseReplicatedVertex) query.element;
+                        BaseReplicatedVertex replica = getStorage().getVertex(incoming.getId());
+                        if(replica!=null)replica.sync(context,incoming);
+                    }
                     else getStorage().updateEdge((Edge) query.element);
                 }
                 case REMOVE -> System.out.println("Remove Operation");

@@ -1,22 +1,25 @@
 package StreamPartitioning.storage;
 
 import StreamPartitioning.types.Edge;
-import StreamPartitioning.types.Vertex;
+import StreamPartitioning.vertex.BaseReplicatedVertex;
+import StreamPartitioning.vertex.Vertex;
 
-import java.util.function.Predicate;
 import java.util.stream.Stream;
 
-public interface GraphStorage {
+public interface GraphStorage<VT extends BaseReplicatedVertex> {
     // CRUD Related Stuff
-    void addVertex(Vertex v);
-    void deleteVertex(Vertex v);
-    void updateVertex(Vertex v);
-    void addEdge(Edge e);
-    void deleteEdge(Edge e);
-    void updateEdge(Edge e);
+    void addVertex(VT v);
+    void deleteVertex(VT v);
+    void updateVertex(VT v);
+    void addEdge(Edge<VT> e);
+    void deleteEdge(Edge<VT> e);
+    void updateEdge(Edge<VT> e);
 
     // Query Related Stuff
-    Stream<Vertex> getVertices();
-    Stream<Edge> getEdges();
+    VT getVertex(String id);
+    Stream<VT> getVertices();
+    Stream<Edge<VT>> getEdges();
+    Edge<VT> getEdge();
+
 
 }

@@ -1,5 +1,6 @@
 package StreamPartitioning;
 
+import StreamPartitioning.aggregators.GNNAggregator.BaseGNNAggregator;
 import StreamPartitioning.aggregators.PartitionReportingAggregator.PartitionReportingAggregator;
 import StreamPartitioning.partitioners.RandomVertexCutPartitioner;
 import StreamPartitioning.parts.SimpleStoragePart;
@@ -18,17 +19,19 @@ import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 
 /**
- * @// TODO: 29/10/2021 Vertex-cut partitioning
- * @// TODO: 29/10/2021 Implements push based streaming GNN-algorithm
+ * @// TODO: #done 29/10/2021 Vertex-cut partitioning
+ * @// TODO: #done 29/10/2021 Implements push based streaming GNN-algorithm
  * @// TODO: 29/10/2021 Implements serveral HDRF like algorithms
  * @// TODO: 29/10/2021 Test and think about data consistnecy
  */
 public class StreamPartitioning {
     public static void main(String[] args) throws Exception {
         final StreamExecutionEnvironment env = StreamExecutionEnvironment.createLocalEnvironment();
+        env.setParallelism(10);
         env.getConfig().disableClosureCleaner();
         StatefulFunctionsConfig config = StatefulFunctionsConfig.fromEnvironment(env);
         config.setFactoryType(MessageFactoryType.WITH_KRYO_PAYLOADS);
+
 
         DataStream<UserQuery> stream = env.addSource(new GraphGenerator()).returns(Types.POJO(UserQuery.class));
 
@@ -48,6 +51,7 @@ public class StreamPartitioning {
                 .withFunctionProvider(Identifiers.PART_TYPE,(param)->
                         new SimpleStoragePart()
                                 .setStorage(new HashMapGraphStorage())
+                                .attachAggregator(new BaseGNNAggregator())
                                 )
                 .withConfiguration(config)
                 .withEgressId(PartitionReportingAggregator.egress)

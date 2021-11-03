@@ -7,7 +7,10 @@ package StreamPartitioning.types;
  */
 public interface GraphElement{
 
-    String getId();
+    String getId(); // If of the GraphElement
+
+    Short getPart();
     boolean equals(GraphElement e);
+    Object getFeature(Short l);
 
 }
