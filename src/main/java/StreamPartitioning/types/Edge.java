@@ -2,42 +2,30 @@ package StreamPartitioning.types;
 
 import StreamPartitioning.vertex.BaseReplicatedVertex;
 import StreamPartitioning.vertex.Vertex;
+import org.apache.flink.statefun.sdk.Context;
+
+import java.util.concurrent.CompletableFuture;
 
 /**
  * Simple weighted Edge implementation
  * Soure,Dest -> (Vertex Id, Part Id)
  */
-public class Edge<VT extends BaseReplicatedVertex> implements GraphElement {
-    public VT source = null;
-    public VT destination = null;
+public class Edge extends GraphElement {
+    public BaseReplicatedVertex source = null;
+    public BaseReplicatedVertex destination = null;
     public Float weight = 1.0f;
-
-    @Override
-    public Short getPart() {
-        return null;
+    public Edge(String id, Short partId){
+        super(id,partId);
     }
-
-    @Override
-    public Object getFeature(Short l) {
-        return 0;
+    public Edge(String id ){
+        super(id);
     }
-
-    @Override
-    public String getId() {
-        return this.source.getId();
-    }
-
-    @Override
-    public boolean equals(GraphElement e) {
-        return getId()==e.getId();
-    }
-
-
-    public Edge betweenVertices(VT source, VT destination) {
+    public Edge(BaseReplicatedVertex source,BaseReplicatedVertex destination){
+        super(source.getId()+destination.getId());
         this.source = source;
         this.destination = destination;
-        return this;
     }
+
     public Edge withWeight(Float weight) {
         this.weight = weight;
         return this;

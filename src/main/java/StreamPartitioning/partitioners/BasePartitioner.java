@@ -1,8 +1,5 @@
 package StreamPartitioning.partitioners;
 
-import StreamPartitioning.types.UserQuery;
-import org.apache.flink.statefun.sdk.Context;
-import org.apache.flink.statefun.sdk.StatefulFunction;
 import org.apache.flink.statefun.sdk.match.StatefulMatchFunction;
 
 abstract public class BasePartitioner extends StatefulMatchFunction {

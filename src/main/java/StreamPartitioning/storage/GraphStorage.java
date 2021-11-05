@@ -1,25 +1,26 @@
 package StreamPartitioning.storage;
 
 import StreamPartitioning.types.Edge;
+import StreamPartitioning.features.Feature;
 import StreamPartitioning.vertex.BaseReplicatedVertex;
-import StreamPartitioning.vertex.Vertex;
+import org.apache.flink.statefun.sdk.Context;
 
 import java.util.stream.Stream;
 
-public interface GraphStorage<VT extends BaseReplicatedVertex> {
+public interface GraphStorage {
     // CRUD Related Stuff
-    void addVertex(VT v);
-    void deleteVertex(VT v);
-    void updateVertex(VT v);
-    void addEdge(Edge<VT> e);
-    void deleteEdge(Edge<VT> e);
-    void updateEdge(Edge<VT> e);
+    boolean addVertex(BaseReplicatedVertex v, Context c);
+    void deleteVertex(BaseReplicatedVertex v,Context c);
+    void updateVertex(Feature f,Context c);
+    void addEdge(Edge e,Context c);
+    void deleteEdge(Edge e,Context c);
+    void updateEdge(Edge e,Context c);
 
     // Query Related Stuff
-    VT getVertex(String id);
-    Stream<VT> getVertices();
-    Stream<Edge<VT>> getEdges();
-    Edge<VT> getEdge();
+    BaseReplicatedVertex getVertex(String id);
+    Stream<BaseReplicatedVertex> getVertices();
+    Stream<Edge> getEdges();
+    Edge getEdge();
 
 
 }

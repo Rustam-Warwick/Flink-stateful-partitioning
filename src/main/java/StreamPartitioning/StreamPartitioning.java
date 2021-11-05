@@ -1,12 +1,12 @@
 package StreamPartitioning;
 
-import StreamPartitioning.aggregators.GNNAggregator.BaseGNNAggregator;
 import StreamPartitioning.aggregators.PartitionReportingAggregator.PartitionReportingAggregator;
 import StreamPartitioning.partitioners.RandomVertexCutPartitioner;
 import StreamPartitioning.parts.SimpleStoragePart;
+import StreamPartitioning.serializers.MyKryo;
 import StreamPartitioning.sources.GraphGenerator;
 import StreamPartitioning.storage.HashMapGraphStorage;
-import StreamPartitioning.types.UserQuery;
+import StreamPartitioning.types.GraphQuery;
 import StreamPartitioning.types.Identifiers;
 import org.apache.flink.api.common.typeinfo.Types;
 import org.apache.flink.statefun.flink.core.StatefulFunctionsConfig;
@@ -20,7 +20,6 @@ import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 
 /**
  * @// TODO: #done 29/10/2021 Vertex-cut partitioning
- * @// TODO: #done 29/10/2021 Implements push based streaming GNN-algorithm
  * @// TODO: 29/10/2021 Implements serveral HDRF like algorithms
  * @// TODO: 29/10/2021 Test and think about data consistnecy
  */
@@ -30,10 +29,11 @@ public class StreamPartitioning {
         env.setParallelism(10);
         env.getConfig().disableClosureCleaner();
         StatefulFunctionsConfig config = StatefulFunctionsConfig.fromEnvironment(env);
-        config.setFactoryType(MessageFactoryType.WITH_KRYO_PAYLOADS);
+        config.setCustomPayloadSerializerClassName(MyKryo.class.getName());
+        config.setFactoryType(MessageFactoryType.WITH_CUSTOM_PAYLOADS);
 
 
-        DataStream<UserQuery> stream = env.addSource(new GraphGenerator()).returns(Types.POJO(UserQuery.class));
+        DataStream<GraphQuery> stream = env.addSource(new GraphGenerator()).returns(Types.POJO(GraphQuery.class));
 
         DataStream<RoutableMessage> ingress = stream.map(graphElement->
            RoutableMessageBuilder
@@ -51,7 +51,7 @@ public class StreamPartitioning {
                 .withFunctionProvider(Identifiers.PART_TYPE,(param)->
                         new SimpleStoragePart()
                                 .setStorage(new HashMapGraphStorage())
-                                .attachAggregator(new BaseGNNAggregator())
+//                                .attachAggregator(new BaseGNNAggregator())
                                 )
                 .withConfiguration(config)
                 .withEgressId(PartitionReportingAggregator.egress)

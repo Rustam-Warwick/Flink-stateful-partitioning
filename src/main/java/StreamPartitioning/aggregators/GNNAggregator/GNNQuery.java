@@ -4,25 +4,34 @@ import StreamPartitioning.vertex.Vertex;
 
 public class GNNQuery {
     public enum OPERATORS {NONE, AGG_REQ,AGG_RES,UPD_REQ}
-    public Vertex vertex = null;
-    public short L = 1;
+
+    public String vertexId = null;
+    public short l = 1;
     public OPERATORS op = OPERATORS.NONE;
-    public Integer agg = 0;
+    public Object agg = null;
     public String uuid = null;
+
     public GNNQuery withId(String id){
         uuid = id;
+        return this;
+    }
+
+    public GNNQuery withAggValue(Object a){
+        this.agg = a;
         return this;
     }
     public GNNQuery withOperator(OPERATORS op){
             this.op = op;
             return this;
     }
+
     public GNNQuery withLValue(short L){
-        this.L = L;
+        this.l = L;
         return this;
     }
-    public GNNQuery withVertex(Vertex v){
-        this.vertex = v;
+
+    public GNNQuery withVertex(String v){
+        this.vertexId = v;
         return this;
     }
 

@@ -1,9 +1,8 @@
 package StreamPartitioning.sources;
 
 import StreamPartitioning.types.Edge;
-import StreamPartitioning.types.UserQuery;
+import StreamPartitioning.types.GraphQuery;
 import StreamPartitioning.vertex.BaseReplicatedVertex;
-import StreamPartitioning.vertex.Vertex;
 import org.apache.flink.configuration.Configuration;
 import org.apache.flink.streaming.api.functions.source.RichParallelSourceFunction;
 
@@ -14,7 +13,7 @@ import java.util.function.IntConsumer;
  * Responsible for fake graph generation.
  * Streaming Edges for a directed graph to be consumed by the main partitioner
  */
-public class GraphGenerator extends RichParallelSourceFunction<UserQuery> {
+public class GraphGenerator extends RichParallelSourceFunction<GraphQuery> {
     private Random random;
     private volatile boolean isRunning = true;
     private int N; // Num of vertices
@@ -38,7 +37,7 @@ public class GraphGenerator extends RichParallelSourceFunction<UserQuery> {
         return false;
     }
     @Override
-    public void run(SourceContext<UserQuery> ctx) throws Exception {
+    public void run(SourceContext<GraphQuery> ctx) throws Exception {
         short edges[] = new short[N];
         double pVertexStream = (double) 1/D;
         random.ints(N*D,0,N).forEach(new IntConsumer() {
@@ -52,10 +51,11 @@ public class GraphGenerator extends RichParallelSourceFunction<UserQuery> {
                 }
                 else{
                     // 1. Add as the source
-                    BaseReplicatedVertex src = new Vertex().withId(String.valueOf(srcId));
-                    BaseReplicatedVertex dest = new Vertex().withId(String.valueOf(value));
-                    Edge edge = new Edge().betweenVertices(src,dest);
-                    UserQuery query = new UserQuery(edge).changeOperation(UserQuery.OPERATORS.ADD);
+
+                    BaseReplicatedVertex src = new BaseReplicatedVertex(String.valueOf(srcId));
+                    BaseReplicatedVertex dest = new BaseReplicatedVertex(String.valueOf(value));
+                    Edge edge = new Edge(src,dest);
+                    GraphQuery query = new GraphQuery(edge).changeOperation(GraphQuery.OPERATORS.ADD);
                     ctx.collect(query);
                     // 2. Increment data structure
                     edges[value]++;

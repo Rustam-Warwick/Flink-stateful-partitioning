@@ -1,8 +1,9 @@
 package StreamPartitioning.storage;
 
 import StreamPartitioning.types.Edge;
+import StreamPartitioning.features.Feature;
 import StreamPartitioning.vertex.BaseReplicatedVertex;
-import StreamPartitioning.vertex.Vertex;
+import org.apache.flink.statefun.sdk.Context;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -11,7 +12,7 @@ import java.util.stream.Stream;
 /**
  * HashMap Based Vertex-Centric graph storage
  */
-public class HashMapGraphStorage<VT extends BaseReplicatedVertex> implements GraphStorage<VT> {
+public class HashMapGraphStorage implements GraphStorage {
     /**
      * Stores Edges as a map of (source_key=>(dest_key))
      */
@@ -20,7 +21,7 @@ public class HashMapGraphStorage<VT extends BaseReplicatedVertex> implements Gra
      * Stores Vertex hashed by source id. Good for O(1) search
      * Note that dest vertices are stored here as well with the isPart attribute set to something else
      */
-    public HashMap<String, VT> vertices;
+    public HashMap<String, BaseReplicatedVertex> vertices;
 
     public HashMapGraphStorage() {
         edges = new HashMap<>();
@@ -28,75 +29,70 @@ public class HashMapGraphStorage<VT extends BaseReplicatedVertex> implements Gra
     }
 
     @Override
-    public void addVertex(VT v) {
+    public boolean addVertex(BaseReplicatedVertex v, Context c) {
         // If vertex is already here then discard it
-        if(vertices.containsKey(v.getId()))return;
-        vertices.put(v.getId(),v);
+        if(vertices.containsKey(v.getId()))return false;
+        BaseReplicatedVertex vC = v.copy();
+        vertices.put(v.getId(), vC);
+        vC.addVertexCallback(c);
+        return true;
     }
 
     @Override
-    public void deleteVertex(VT v) {
+    public void deleteVertex(BaseReplicatedVertex v,Context c) {
 
     }
 
     @Override
-    public void updateVertex(VT v) {
-        // 1. If vertex DNE simply discard it???
-        if(!vertices.containsKey(v.getId()))return;
-        // 3. Replace the old vertex with this one
-        vertices.put(v.getId(),v);
+    public void updateVertex(Feature f, Context c) {
+        if(!vertices.containsKey(f.attachedId))return;
+        getVertex(f.attachedId).updateVertexCallback(c,f);
     }
 
     @Override
-    public void addEdge(Edge<VT> e) {
+    public void addEdge(Edge e,Context c) {
         // 1. If source vertex not in storage create it
-        if(!vertices.containsKey(e.source.getId())){
-            vertices.put(e.source.getId(),e.source);
-        }
-        // 2. Do same for destination
-        if(!vertices.containsKey(e.destination.getId())){
-            vertices.put(e.destination.getId(),e.destination);
-        }
-        // 3. Put the edge to the edge list
+        this.addVertex(e.source,c);
+        this.addVertex(e.destination,c);
         edges.putIfAbsent(e.source.getId(),new ArrayList<>());
         edges.get(e.source.getId()).add(e.destination.getId());
+        this.getVertex(e.source.getId()).addEdgeCallback(e,c);
+        this.getVertex(e.destination.getId()).addEdgeCallback(e,c);
+    }
+
+    @Override
+    public void deleteEdge(Edge e,Context c) {
 
     }
 
     @Override
-    public void deleteEdge(Edge<VT> e) {
-
-    }
-
-    @Override
-    public void updateEdge(Edge<VT> e) {
+    public void updateEdge(Edge e,Context c) {
         // Meaningless until we have edge features
 
     }
 
+    // Get Queries
     @Override
-    public VT getVertex(String id) {
+    public BaseReplicatedVertex getVertex(String id) {
         return this.vertices.get(id);
     }
 
     @Override
-    public Edge<VT> getEdge() {
+    public Edge getEdge() {
         return null;
     }
 
+
     @Override
-    public Stream<VT> getVertices() {
+    public Stream<BaseReplicatedVertex> getVertices() {
         return vertices.values().stream();
     }
 
     @Override
-    public Stream<Edge<VT>> getEdges() {
-        return null;
-//        return edges.entrySet().stream().flatMap((item)->(
-//            item
-//            .getValue()
-//            .stream()
-//            .map(a->new Edge().betweenVertices(new Vertex().withId(item.getKey()),new Vertex().withId(a))))
-//            );
+    public Stream<Edge> getEdges() {
+        return edges.entrySet().stream().flatMap(item->(
+           item.getValue().stream()
+                   .map(a->new Edge(getVertex(item.getKey()),getVertex(a)))
+        ));
     }
 }

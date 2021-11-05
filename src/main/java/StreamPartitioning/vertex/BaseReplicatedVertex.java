@@ -1,101 +1,109 @@
 package StreamPartitioning.vertex;
-
-import StreamPartitioning.types.GraphElement;
-import StreamPartitioning.types.Identifiers;
-import StreamPartitioning.types.UserQuery;
+import StreamPartitioning.types.*;
+import StreamPartitioning.features.Feature;
+import StreamPartitioning.features.RemoteArrayListFeature;
 import org.apache.flink.statefun.sdk.Context;
+
+import java.lang.reflect.Field;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.Future;
 import java.util.stream.Stream;
 
-abstract public class BaseReplicatedVertex implements GraphElement {
-    public String id = null; // Id of the vertex, must be unique
-    public Short part = null; // Part where this vertex is located at
-    public Short masterPart = null; // Id of the master Vertex Part, used if vertex-cut partitioning
-    public String lastSync = null; // Last sync with the master
-    public ArrayList<Short> inParts = new ArrayList<>(); // parts with in-Neighbors
-    public ArrayList<Short> outParts = new ArrayList<>(); // parts with out-Neighbors
-    public transient CompletableFuture<ArrayList<Short>> fuzzyInParts = new CompletableFuture<>();
-    public transient CompletableFuture<ArrayList<Short>> fuzzyOutParts = new CompletableFuture<>();
-    // Abstract Functions
-    public abstract void mergeWithIncoming(BaseReplicatedVertex incoming);
-
-    // Main Logic Functions
+/**
+ * @// TODO: 04/11/2021 Add state resolution in copy()
+ */
+public class BaseReplicatedVertex extends BaseVertex {
+    // 1. Data
+    public Short masterPart = null;
+    public RemoteArrayListFeature inParts = new RemoteArrayListFeature(this,"inParts");
+    public RemoteArrayListFeature outParts = new RemoteArrayListFeature(this,"outParts");
+    // 2. Constructors
+    public BaseReplicatedVertex(Short masterPart,Short part,String id) {
+        super(id, part);
+        this.masterPart = masterPart;
+    }
+    public BaseReplicatedVertex(Short masterPart,String id) {
+        super(id);
+        this.masterPart = masterPart;
+    }
+    public BaseReplicatedVertex(String id){
+        super(id);
+        this.masterPart = null;
+    }
+    // 3. Communication helpers
     public void sendThisToReplicas(Context c,Object msg){
-        Stream.concat(this.inParts.stream(),this.outParts.stream())
-                .distinct()
-                .filter(item->item!=this.part)
-                .forEach(item->{
-                    System.out.println(item);
-                    c.send(Identifiers.PART_TYPE,item.toString(),msg);
-                });
+        CompletableFuture.allOf(inParts.getValue(),outParts.getValue()).whenComplete((vzoid,err)->{
+            try{
+                Stream.concat(inParts.getValue().get().stream(),outParts.getValue().get().stream())
+                        .distinct()
+                        .forEach(item->{
+                            if(item==null)return;
+                            c.send(Identifiers.PART_TYPE, item.toString(),msg);
+                        });
+            }catch(Exception e){
+
+            }
+        });
+
+    }
+    public void sendThisToOutPartsAsync(Context c, Object msg){
+        this.outParts.getValue().whenComplete((list,exception)->{
+            list.forEach(item->{
+                c.send(Identifiers.PART_TYPE,item.toString(),msg);
+            });
+        });
+    }
+    public void sendThisToInPartsAsync(Context c, Object msg){
+        this.inParts.getValue().whenComplete((list,exception)->{
+            list.forEach(item->{
+                c.send(Identifiers.PART_TYPE,item.toString(),msg);
+            });
+        });
+    }
+    public void sendThisToMaster(Context c,Object o){
+        c.send(Identifiers.PART_TYPE, this.masterPart.toString(), o);
     }
 
-    public void updateMaster(Context c){
-        if(this.isPlaceholder()){
-            UserQuery query = new UserQuery(this).changeOperation(UserQuery.OPERATORS.UPDATE);
-            c.send(Identifiers.PART_TYPE, this.getMasterId().toString(), query);
+    // 4. Callbacks
+    @Override
+    public void addEdgeCallback(Edge e,Context c){
+        RemoteArrayListFeature updateThis = null;
+        if(e.source.equals(this))updateThis=this.outParts;
+        else if(e.destination.equals(this))updateThis=this.inParts;
+        if(updateThis!=null){
+            updateThis.add(this.getPart(),c);
         }
     }
-    public void sync(Context c,BaseReplicatedVertex incoming) {
-        // 1. Merge incoming message with this copy
-        this.mergeWithIncoming(incoming);
-        this.fuzzyInParts.complete(this.inParts);
-        this.fuzzyOutParts.complete(this.outParts);
-        if(this.isMaster()){
-            // 1. Send updated master node to all replicas
-            this.lastSync = new Date().toString();
-            UserQuery query = new UserQuery(this).changeOperation(UserQuery.OPERATORS.UPDATE);
-            this.sendThisToReplicas(c,query);
-        }
-        else{
-            System.out.println("Non Master Sync");
-        }
+    @Override
+    public void addVertexCallback(Context c){
+        this.setPart(Short.valueOf(c.self().id()));
+    }
+    @Override
+    public void updateVertexCallback(Context c,Feature f){
+       try{
+           Field a = this.getClass().getDeclaredField(f.fieldName);
+           Feature value = (Feature) a.get(this);
+           value.setValue(f,c);
+       }catch (Exception e){
+
+       }
+    }
+    // Overrides
+    public BaseReplicatedVertex copy() {
+        BaseReplicatedVertex tmp = new BaseReplicatedVertex(this.masterPart,this.part,this.id);
+        return tmp;
     }
 
+     // 4. Helpers Setters
+    public void setMasterPart(Short e){
+        this.masterPart = e;
+     }
+    public Short getMasterPart(){
+        return this.masterPart;
+    }
 
-    // getters, setters & helpers
-    public Short getMasterId() {
-        return masterPart;
-    }
-    public BaseReplicatedVertex withId(String id){
-        this.id = id;
-        return this;
-    }
-    public BaseReplicatedVertex withMasterId(Short id){
-        this.masterPart = id;
-        return this;
-    }
     public boolean isMaster(){
         return masterPart==null;
     }
-    public boolean isPlaceholder(){
-        return !this.isMaster() && this.lastSync==null;
-    }
-    public CompletableFuture<ArrayList<Short>> getInParts(){
-        return fuzzyInParts;
-    }
-    public CompletableFuture<ArrayList<Short>> getOutParts(){
-        return fuzzyOutParts;
-    }
 
-
-
-//    OVERRIDES
-    @Override
-    public Short getPart() {
-        return part;
-    }
-
-    @Override
-    public String getId() {
-        return id;
-    }
-
-    @Override
-    public boolean equals(GraphElement e) {
-        return getId()==e.getId();
-    }
 }
