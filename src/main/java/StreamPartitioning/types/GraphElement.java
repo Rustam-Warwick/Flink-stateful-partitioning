@@ -4,8 +4,7 @@ package StreamPartitioning.types;
 import java.util.concurrent.CompletableFuture;
 
 /**
- * GraphElement is either a node or edge, or maybe something else in future
- * Has to implement getId(); which should be unique for all memebers of the instance type
+ * Base class for all elements is the graph (Vertex,Edge,)
  */
 abstract public class GraphElement{
     public String id = null;
@@ -18,6 +17,11 @@ abstract public class GraphElement{
         this.id = id;
         this.part = null;
     }
+    public GraphElement(){
+        this.id = null;
+        this.part = null;
+    }
+
     public String getId(){
         return this.id;
     }
@@ -31,7 +35,7 @@ abstract public class GraphElement{
         return this.part;
     }
     public boolean equals(GraphElement e){
-        return e.getClass().equals(this.getClass()) && this.getId()==e.getId();
+        return e.getClass().toString().equals(this.getClass().toString()) && this.getId().equals(e.getId());
     }
 
 }

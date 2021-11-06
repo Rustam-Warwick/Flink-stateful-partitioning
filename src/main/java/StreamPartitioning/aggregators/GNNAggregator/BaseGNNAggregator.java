@@ -1,7 +1,7 @@
 package StreamPartitioning.aggregators.GNNAggregator;
 
 import StreamPartitioning.aggregators.BaseAggregator;
-import StreamPartitioning.types.Edge;
+import StreamPartitioning.edges.Edge;
 import StreamPartitioning.types.GraphQuery;
 import StreamPartitioning.vertex.BaseReplicatedVertex;
 import org.apache.flink.statefun.sdk.Context;

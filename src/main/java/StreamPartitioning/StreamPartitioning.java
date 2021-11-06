@@ -25,6 +25,7 @@ import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
  */
 public class StreamPartitioning {
     public static void main(String[] args) throws Exception {
+
         final StreamExecutionEnvironment env = StreamExecutionEnvironment.createLocalEnvironment();
         env.setParallelism(10);
         env.getConfig().disableClosureCleaner();

@@ -1,6 +1,6 @@
 package StreamPartitioning.sources;
 
-import StreamPartitioning.types.Edge;
+import StreamPartitioning.edges.Edge;
 import StreamPartitioning.types.GraphQuery;
 import StreamPartitioning.vertex.BaseReplicatedVertex;
 import org.apache.flink.configuration.Configuration;
@@ -22,8 +22,8 @@ public class GraphGenerator extends RichParallelSourceFunction<GraphQuery> {
     public void open(Configuration parameters) throws Exception {
         super.open(parameters);
         random = new Random();
-        this.N = 10;
-        this.D  = 5;
+        this.N = 5;
+        this.D  = 2;
 
     }
 

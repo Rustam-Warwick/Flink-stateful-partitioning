@@ -1,6 +1,6 @@
 package StreamPartitioning.storage;
 
-import StreamPartitioning.types.Edge;
+import StreamPartitioning.edges.Edge;
 import StreamPartitioning.features.Feature;
 import StreamPartitioning.vertex.BaseReplicatedVertex;
 import org.apache.flink.statefun.sdk.Context;
@@ -44,9 +44,10 @@ public class HashMapGraphStorage implements GraphStorage {
     }
 
     @Override
+    @Deprecated
     public void updateVertex(Feature f, Context c) {
         if(!vertices.containsKey(f.attachedId))return;
-        getVertex(f.attachedId).updateVertexCallback(c,f);
+        getVertex(f.attachedId).updateFeatureCallback(c,f);
     }
 
     @Override
@@ -58,6 +59,7 @@ public class HashMapGraphStorage implements GraphStorage {
         edges.get(e.source.getId()).add(e.destination.getId());
         this.getVertex(e.source.getId()).addEdgeCallback(e,c);
         this.getVertex(e.destination.getId()).addEdgeCallback(e,c);
+
     }
 
     @Override

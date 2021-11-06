@@ -1,6 +1,6 @@
 package StreamPartitioning.partitioners;
 
-import StreamPartitioning.types.Edge;
+import StreamPartitioning.edges.Edge;
 import StreamPartitioning.types.Identifiers;
 import StreamPartitioning.types.GraphQuery;
 import StreamPartitioning.vertex.BaseReplicatedVertex;
@@ -34,15 +34,19 @@ public class RandomVertexCutPartitioner<VT extends BaseReplicatedVertex> extends
         if(masterVertexPart.containsKey(newEdge.source.getId())){
             // This vertex has been placed before
             // Is the placed master part different from this one
-            if(masterVertexPart.get(newEdge.source.getId())!=partId)newEdge.source.setMasterPart(masterVertexPart.get(newEdge.source.getId()));
+            if(!masterVertexPart.get(newEdge.source.getId()).equals(partId))newEdge.source.setMasterPart(masterVertexPart.get(newEdge.source.getId()));
+            else newEdge.source.setMasterPart(null);
         }else{
             // this is the master vertex it is here for the first time
+            newEdge.source.setMasterPart(null);
             masterVertexPart.put(newEdge.source.getId(),partId);
         }
         // 3. Same as step 2
         if(masterVertexPart.containsKey(newEdge.destination.getId())){
-            if(masterVertexPart.get(newEdge.destination.getId())!=partId)newEdge.destination.setMasterPart(masterVertexPart.get(newEdge.destination.getId()));
+            if(!masterVertexPart.get(newEdge.destination.getId()).equals(partId))newEdge.destination.setMasterPart(masterVertexPart.get(newEdge.destination.getId()));
+            else newEdge.destination.setMasterPart(null);
         }else{
+            newEdge.destination.setMasterPart(null);
             masterVertexPart.put(newEdge.destination.getId(),partId);
         }
     }
@@ -54,7 +58,10 @@ public class RandomVertexCutPartitioner<VT extends BaseReplicatedVertex> extends
         if(query.element instanceof Edge){
             newEdge(c,query,partId);
             Edge tmp = (Edge) query.element;
-            System.out.format("Sending (%s,%s) to partition:%s \n",tmp.source.getId(),tmp.destination.getId(),partId);
+            //System.out.format("Sending (%s,%s) to partition:%s \n",tmp.source.getId(),tmp.destination.getId(),partId);
+
+
+
         }
 
         c.send(Identifiers.PART_TYPE,String.valueOf(partId),query);

@@ -20,16 +20,13 @@ public class MyKryo implements MessagePayloadSerializer {
 
     @Override
     public Payload serialize(@Nonnull Object payloadObject) {
-        System.out.println("Came");
         target.clear();
         try {
             kryo.serialize(payloadObject, target);
         } catch (IOException e) {
             throw new IllegalStateException(e);
         }
-        if(payloadObject instanceof Feature){
-            System.out.println("salam");
-        }
+
         ByteString serializedBytes = ByteString.copyFrom(target.getSharedBuffer(), 0, target.length());
         return Payload.newBuilder()
                 .setClassName(payloadObject.getClass().getName())
@@ -39,7 +36,6 @@ public class MyKryo implements MessagePayloadSerializer {
 
     @Override
     public Object deserialize(@Nonnull ClassLoader targetClassLoader, @Nonnull Payload payload) {
-        System.out.println("came");
         source.setBuffer(payload.getPayloadBytes().asReadOnlyByteBuffer());
         try {
             return kryo.deserialize(source);

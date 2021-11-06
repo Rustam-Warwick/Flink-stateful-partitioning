@@ -1,10 +1,7 @@
-package StreamPartitioning.types;
+package StreamPartitioning.edges;
 
+import StreamPartitioning.types.GraphElement;
 import StreamPartitioning.vertex.BaseReplicatedVertex;
-import StreamPartitioning.vertex.Vertex;
-import org.apache.flink.statefun.sdk.Context;
-
-import java.util.concurrent.CompletableFuture;
 
 /**
  * Simple weighted Edge implementation

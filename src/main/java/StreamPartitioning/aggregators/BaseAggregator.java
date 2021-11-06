@@ -1,8 +1,6 @@
 package StreamPartitioning.aggregators;
 import StreamPartitioning.parts.BasePart;
-import StreamPartitioning.types.Edge;
 import org.apache.flink.statefun.sdk.Context;
-import org.apache.flink.statefun.sdk.io.EgressIdentifier;
 
 /**
  * Base Aggregaation Function. Note that, repartitiioning can also be defined as a sort of graph aggregation

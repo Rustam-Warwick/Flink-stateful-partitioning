@@ -7,13 +7,26 @@ import java.util.concurrent.CompletableFuture;
 
 abstract public class Feature<T> {
     abstract public CompletableFuture<T> getValue();
-    abstract public void setValue(Feature<T> v, Context context);
+    abstract public void updateValue(Feature<T> v, Context context);
 
     public String fieldName;
     public String attachedId=null;
-    public Class<? extends GraphElement> attachedToClass=null;
+    public String attachedToClassName=null;
 
+    public Feature(){
+        this.fieldName = null;
+        this.attachedId = null;
+        this.attachedToClassName = null;
+    }
     public Feature(String fieldName) {
         this.fieldName = fieldName;
+        this.attachedId = null;
+        this.attachedToClassName = null;
     }
+    public Feature(String fieldName,GraphElement element){
+        this.fieldName = fieldName;
+        this.attachedId = element.getId();
+        this.attachedToClassName = element.getClass().getName();
+    }
+
 }

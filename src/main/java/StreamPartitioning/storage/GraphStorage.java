@@ -1,6 +1,6 @@
 package StreamPartitioning.storage;
 
-import StreamPartitioning.types.Edge;
+import StreamPartitioning.edges.Edge;
 import StreamPartitioning.features.Feature;
 import StreamPartitioning.vertex.BaseReplicatedVertex;
 import org.apache.flink.statefun.sdk.Context;

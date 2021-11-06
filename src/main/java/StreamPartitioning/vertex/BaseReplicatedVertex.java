@@ -1,37 +1,37 @@
 package StreamPartitioning.vertex;
+import StreamPartitioning.edges.Edge;
 import StreamPartitioning.types.*;
 import StreamPartitioning.features.Feature;
-import StreamPartitioning.features.RemoteArrayListFeature;
+import StreamPartitioning.features.RemoteShortArrayListFeature;
 import org.apache.flink.statefun.sdk.Context;
 
 import java.lang.reflect.Field;
-import java.util.ArrayList;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Stream;
 
 /**
  * @// TODO: 04/11/2021 Add state resolution in copy()
  */
-public class BaseReplicatedVertex extends BaseVertex {
+public class BaseReplicatedVertex extends ReplicableGraphElement implements BaseVertex {
     // 1. Data
-    public Short masterPart = null;
-    public RemoteArrayListFeature inParts = new RemoteArrayListFeature(this,"inParts");
-    public RemoteArrayListFeature outParts = new RemoteArrayListFeature(this,"outParts");
+    public RemoteShortArrayListFeature inParts = new RemoteShortArrayListFeature("inParts",this);
+    public RemoteShortArrayListFeature outParts = new RemoteShortArrayListFeature("outParts",this);
     // 2. Constructors
-    public BaseReplicatedVertex(Short masterPart,Short part,String id) {
-        super(id, part);
-        this.masterPart = masterPart;
-    }
-    public BaseReplicatedVertex(Short masterPart,String id) {
-        super(id);
-        this.masterPart = masterPart;
+    public BaseReplicatedVertex(){
+        super();
     }
     public BaseReplicatedVertex(String id){
         super(id);
-        this.masterPart = null;
+    }
+    public BaseReplicatedVertex(String id, Short part){
+        super(id,part);
+    }
+    public BaseReplicatedVertex(String id, Short part,Short masterPart){
+        super(id,part,masterPart);
     }
     // 3. Communication helpers
-    public void sendThisToReplicas(Context c,Object msg){
+    @Override
+    public void sendMessageToReplicas(Context c,Object msg){
         CompletableFuture.allOf(inParts.getValue(),outParts.getValue()).whenComplete((vzoid,err)->{
             try{
                 Stream.concat(inParts.getValue().get().stream(),outParts.getValue().get().stream())
@@ -60,14 +60,11 @@ public class BaseReplicatedVertex extends BaseVertex {
             });
         });
     }
-    public void sendThisToMaster(Context c,Object o){
-        c.send(Identifiers.PART_TYPE, this.masterPart.toString(), o);
-    }
 
     // 4. Callbacks
     @Override
-    public void addEdgeCallback(Edge e,Context c){
-        RemoteArrayListFeature updateThis = null;
+    public void addEdgeCallback(Edge e, Context c){
+        RemoteShortArrayListFeature updateThis = null;
         if(e.source.equals(this))updateThis=this.outParts;
         else if(e.destination.equals(this))updateThis=this.inParts;
         if(updateThis!=null){
@@ -76,34 +73,22 @@ public class BaseReplicatedVertex extends BaseVertex {
     }
     @Override
     public void addVertexCallback(Context c){
-        this.setPart(Short.valueOf(c.self().id()));
+        this.setPart(Short.valueOf(c.self().id()));this.inParts.startTimer();
     }
     @Override
-    public void updateVertexCallback(Context c,Feature f){
+    public void updateFeatureCallback(Context c,Feature f){
        try{
            Field a = this.getClass().getDeclaredField(f.fieldName);
            Feature value = (Feature) a.get(this);
-           value.setValue(f,c);
+           value.updateValue(f,c);
        }catch (Exception e){
 
        }
     }
     // Overrides
     public BaseReplicatedVertex copy() {
-        BaseReplicatedVertex tmp = new BaseReplicatedVertex(this.masterPart,this.part,this.id);
+        BaseReplicatedVertex tmp = new BaseReplicatedVertex(this.id,this.part,this.masterPart);
         return tmp;
-    }
-
-     // 4. Helpers Setters
-    public void setMasterPart(Short e){
-        this.masterPart = e;
-     }
-    public Short getMasterPart(){
-        return this.masterPart;
-    }
-
-    public boolean isMaster(){
-        return masterPart==null;
     }
 
 }
