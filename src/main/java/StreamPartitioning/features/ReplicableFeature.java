@@ -8,7 +8,7 @@ import org.apache.flink.statefun.sdk.Context;
 import java.util.concurrent.CompletableFuture;
 
 public abstract class ReplicableFeature<T> extends Feature<T> {
-    public Integer lastSync = 1;
+    public Integer lastSync = -1;
     public T value=null;
     public ReplicableGraphElement.STATE replicationState= ReplicableGraphElement.STATE.NONE;
     public Short part = null;
