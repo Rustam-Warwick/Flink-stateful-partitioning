@@ -12,7 +12,7 @@ import java.util.logging.Logger;
 /**
  * Simple Stores the message in the available storage back-end. Only works for vertex-cut operations
  */
-public class SimpleStoragePart<VT extends BaseReplicatedVertex> extends BasePart{
+public class SimpleStoragePart<VT extends BaseReplicatedVertex> extends BasePart<VT>{
 
 
     public SimpleStoragePart(){
@@ -33,7 +33,7 @@ public class SimpleStoragePart<VT extends BaseReplicatedVertex> extends BasePart
                 switch (query.op) {
                     case ADD -> {
                         if (isEdge) {
-                            Edge tmp = (Edge) query.element;
+                            Edge<VT> tmp = (Edge) query.element;
                             getStorage().addEdge(tmp, context);
                         }
                     }
@@ -42,8 +42,8 @@ public class SimpleStoragePart<VT extends BaseReplicatedVertex> extends BasePart
                         if (isFeature) {
                             Feature tmp = (Feature) query.element;
                             Class<?> clazz = Class.forName(tmp.attachedToClassName);
-                            if(BaseVertex.class.isAssignableFrom(clazz)){
-                                BaseVertex vertex = getStorage().getVertex(tmp.attachedId);
+                            if(BaseReplicatedVertex.class.isAssignableFrom(clazz)){
+                                BaseReplicatedVertex vertex = getStorage().getVertex(tmp.attachedId);
                                 if(vertex==null){
                                     return;
                                 }
@@ -58,7 +58,7 @@ public class SimpleStoragePart<VT extends BaseReplicatedVertex> extends BasePart
             // Check if there is any aggregator responsible for this guy
             // If there is call its dispatch method
             aggFunctions.forEach((fn) -> {
-                if (fn.shouldTrigger(msg)) fn.dispatch(context, msg);
+//                if (fn.shouldTrigger(msg)) fn.dispatch(context, msg);
             });
         }catch (ClassNotFoundException e){
             Logger.getLogger("warnng").warning(e.getMessage());

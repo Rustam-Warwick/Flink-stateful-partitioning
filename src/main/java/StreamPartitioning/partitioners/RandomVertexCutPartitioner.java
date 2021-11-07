@@ -1,9 +1,11 @@
 package StreamPartitioning.partitioners;
 
 import StreamPartitioning.edges.Edge;
+import StreamPartitioning.types.GraphElement;
 import StreamPartitioning.types.Identifiers;
 import StreamPartitioning.types.GraphQuery;
 import StreamPartitioning.vertex.BaseReplicatedVertex;
+import StreamPartitioning.vertex.Vertex;
 import org.apache.flink.statefun.sdk.Context;
 import org.apache.flink.statefun.sdk.match.MatchBinder;
 
@@ -15,7 +17,7 @@ import java.util.Random;
  * Randomly select a part from the vertex list
  *
  */
-public class RandomVertexCutPartitioner<VT extends BaseReplicatedVertex> extends BasePartitioner{
+public class RandomVertexCutPartitioner extends BasePartitioner{
     public Random random;
 
     public HashMap<String,Short> masterVertexPart = new HashMap<>();
@@ -29,7 +31,7 @@ public class RandomVertexCutPartitioner<VT extends BaseReplicatedVertex> extends
         matchBinder.predicate(GraphQuery.class,this::partition);
     }
     public void newEdge(Context c, GraphQuery query, Short partId){
-        Edge newEdge = (Edge) query.element;
+        Edge<BaseReplicatedVertex> newEdge = (Edge) query.element;
         // 2. Resolve the Master Vertices
         if(masterVertexPart.containsKey(newEdge.source.getId())){
             // This vertex has been placed before
@@ -57,11 +59,6 @@ public class RandomVertexCutPartitioner<VT extends BaseReplicatedVertex> extends
         // 2. Handle Edge addition logic
         if(query.element instanceof Edge){
             newEdge(c,query,partId);
-            Edge tmp = (Edge) query.element;
-            //System.out.format("Sending (%s,%s) to partition:%s \n",tmp.source.getId(),tmp.destination.getId(),partId);
-
-
-
         }
 
         c.send(Identifiers.PART_TYPE,String.valueOf(partId),query);

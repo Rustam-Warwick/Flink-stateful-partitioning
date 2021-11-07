@@ -34,7 +34,9 @@ abstract public class GraphElement{
     public Short getPart(){
         return this.part;
     }
-    public boolean equals(GraphElement e){
+    @Override
+    public boolean equals(Object o){
+        GraphElement e =(GraphElement) o;
         return e.getClass().toString().equals(this.getClass().toString()) && this.getId().equals(e.getId());
     }
 

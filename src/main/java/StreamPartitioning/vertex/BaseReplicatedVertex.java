@@ -1,21 +1,25 @@
 package StreamPartitioning.vertex;
 import StreamPartitioning.edges.Edge;
+import StreamPartitioning.features.ReplicableFeature;
 import StreamPartitioning.types.*;
 import StreamPartitioning.features.Feature;
-import StreamPartitioning.features.RemoteShortArrayListFeature;
+import StreamPartitioning.features.ReplicableArrayListFeature;
 import org.apache.flink.statefun.sdk.Context;
 
 import java.lang.reflect.Field;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Stream;
 
 /**
  * @// TODO: 04/11/2021 Add state resolution in copy()
  */
-public class BaseReplicatedVertex extends ReplicableGraphElement implements BaseVertex {
+abstract public class BaseReplicatedVertex extends ReplicableGraphElement implements BaseVertex {
     // 1. Data
-    public RemoteShortArrayListFeature inParts = new RemoteShortArrayListFeature("inParts",this);
-    public RemoteShortArrayListFeature outParts = new RemoteShortArrayListFeature("outParts",this);
+    public ReplicableArrayListFeature<Short> inParts = new ReplicableArrayListFeature<>("inParts",this);
+    public ReplicableArrayListFeature<Short> outParts = new ReplicableArrayListFeature<>("outParts",this);
     // 2. Constructors
     public BaseReplicatedVertex(){
         super();
@@ -30,6 +34,7 @@ public class BaseReplicatedVertex extends ReplicableGraphElement implements Base
         super(id,part,masterPart);
     }
     // 3. Communication helpers
+
     @Override
     public void sendMessageToReplicas(Context c,Object msg){
         CompletableFuture.allOf(inParts.getValue(),outParts.getValue()).whenComplete((vzoid,err)->{
@@ -64,7 +69,7 @@ public class BaseReplicatedVertex extends ReplicableGraphElement implements Base
     // 4. Callbacks
     @Override
     public void addEdgeCallback(Edge e, Context c){
-        RemoteShortArrayListFeature updateThis = null;
+        ReplicableArrayListFeature<Short> updateThis = null;
         if(e.source.equals(this))updateThis=this.outParts;
         else if(e.destination.equals(this))updateThis=this.inParts;
         if(updateThis!=null){
@@ -72,23 +77,67 @@ public class BaseReplicatedVertex extends ReplicableGraphElement implements Base
         }
     }
     @Override
-    public void addVertexCallback(Context c){
+    public void addVertexCallback(Context c) {
+        // 1. Update the current part, of this vertex to the part of this context
         this.setPart(Short.valueOf(c.self().id()));this.inParts.startTimer();
+        // 2. Sync Features which are remote with the parent.
+        try{
+            ArrayList<Field> fields = BaseReplicatedVertex.getReplicableFeatures(this);
+            for(Field f:fields){
+                ReplicableFeature<?> tmp = (ReplicableFeature) f.get(this);
+                tmp.sync(c,true);
+            }
+        }
+        catch (IllegalAccessException e){
+            System.out.println(e);
+        }
+
     }
     @Override
     public void updateFeatureCallback(Context c,Feature f){
+        // New update request for a feature
        try{
-           Field a = this.getClass().getDeclaredField(f.fieldName);
+           Field a = BaseReplicatedVertex.getReplicatedFeature(this,f.fieldName);
            Feature value = (Feature) a.get(this);
            value.updateValue(f,c);
        }catch (Exception e){
-
+           System.out.println(e);
        }
     }
-    // Overrides
-    public BaseReplicatedVertex copy() {
-        BaseReplicatedVertex tmp = new BaseReplicatedVertex(this.id,this.part,this.masterPart);
-        return tmp;
+    // Abstracts
+    abstract public BaseReplicatedVertex copy();
+    abstract public CompletableFuture<? extends Object> getFeature(short l);
+    // Static Methods
+    public static ArrayList<Field> getReplicableFeatures(BaseReplicatedVertex el){
+        Class<?> tmp = null;
+        ArrayList<Field> fields = new ArrayList<>();
+        do{
+            if(tmp==null) tmp=el.getClass();
+            else tmp = tmp.getSuperclass();
+            Field[] fieldsForClass = tmp.getDeclaredFields();
+            for(Field tmpField:fieldsForClass){
+                if(ReplicableFeature.class.isAssignableFrom(tmpField.getType()))fields.add(tmpField);
+            }
+        }
+        while(!tmp.equals(BaseReplicatedVertex.class));
+        return fields;
     }
-
+    public static Field getReplicatedFeature(BaseReplicatedVertex el,String fieldName) throws NoSuchFieldException{
+        Class <?> tmp = null;
+        Field res = null;
+        do{
+            if(tmp==null) tmp=el.getClass();
+            else tmp = tmp.getSuperclass();
+            try{
+                Field tmpField = tmp.getDeclaredField(fieldName);
+                res = tmpField;
+                break;
+            }catch (Exception e){
+                // no need to do anything
+            }
+        }
+        while(!tmp.equals(BaseReplicatedVertex.class));
+        if(res==null) throw new NoSuchFieldException("Field not found") ;
+        return res;
+    }
 }

@@ -12,7 +12,7 @@ import java.util.stream.Stream;
 /**
  * HashMap Based Vertex-Centric graph storage
  */
-public class HashMapGraphStorage implements GraphStorage {
+public class HashMapGraphStorage<VT extends BaseReplicatedVertex> implements GraphStorage<VT> {
     /**
      * Stores Edges as a map of (source_key=>(dest_key))
      */
@@ -21,7 +21,7 @@ public class HashMapGraphStorage implements GraphStorage {
      * Stores Vertex hashed by source id. Good for O(1) search
      * Note that dest vertices are stored here as well with the isPart attribute set to something else
      */
-    public HashMap<String, BaseReplicatedVertex> vertices;
+    public HashMap<String, VT> vertices;
 
     public HashMapGraphStorage() {
         edges = new HashMap<>();
@@ -29,17 +29,17 @@ public class HashMapGraphStorage implements GraphStorage {
     }
 
     @Override
-    public boolean addVertex(BaseReplicatedVertex v, Context c) {
+    public boolean addVertex(VT v, Context c) {
         // If vertex is already here then discard it
         if(vertices.containsKey(v.getId()))return false;
-        BaseReplicatedVertex vC = v.copy();
+        VT vC = (VT) v.copy();
         vertices.put(v.getId(), vC);
         vC.addVertexCallback(c);
         return true;
     }
 
     @Override
-    public void deleteVertex(BaseReplicatedVertex v,Context c) {
+    public void deleteVertex(VT v,Context c) {
 
     }
 
@@ -51,7 +51,7 @@ public class HashMapGraphStorage implements GraphStorage {
     }
 
     @Override
-    public void addEdge(Edge e,Context c) {
+    public void addEdge(Edge<VT> e,Context c) {
         // 1. If source vertex not in storage create it
         this.addVertex(e.source,c);
         this.addVertex(e.destination,c);
@@ -63,38 +63,38 @@ public class HashMapGraphStorage implements GraphStorage {
     }
 
     @Override
-    public void deleteEdge(Edge e,Context c) {
+    public void deleteEdge(Edge<VT> e,Context c) {
 
     }
 
     @Override
-    public void updateEdge(Edge e,Context c) {
+    public void updateEdge(Edge<VT> e,Context c) {
         // Meaningless until we have edge features
 
     }
 
     // Get Queries
     @Override
-    public BaseReplicatedVertex getVertex(String id) {
+    public VT getVertex(String id) {
         return this.vertices.get(id);
     }
 
     @Override
-    public Edge getEdge() {
+    public Edge<VT> getEdge() {
         return null;
     }
 
 
     @Override
-    public Stream<BaseReplicatedVertex> getVertices() {
+    public Stream<VT> getVertices() {
         return vertices.values().stream();
     }
 
     @Override
-    public Stream<Edge> getEdges() {
+    public Stream<Edge<VT>> getEdges() {
         return edges.entrySet().stream().flatMap(item->(
            item.getValue().stream()
-                   .map(a->new Edge(getVertex(item.getKey()),getVertex(a)))
+                   .map(a->new Edge<VT>(getVertex(item.getKey()),getVertex(a)))
         ));
     }
 }

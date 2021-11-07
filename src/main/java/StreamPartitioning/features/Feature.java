@@ -29,4 +29,9 @@ abstract public class Feature<T> {
         this.attachedToClassName = element.getClass().getName();
     }
 
+   @Override
+    public boolean equals(Object e){
+        Feature<?> s = (Feature) e;
+        return s.fieldName.equals(this.fieldName);
+   }
 }

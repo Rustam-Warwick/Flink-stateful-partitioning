@@ -3,6 +3,7 @@ package StreamPartitioning.sources;
 import StreamPartitioning.edges.Edge;
 import StreamPartitioning.types.GraphQuery;
 import StreamPartitioning.vertex.BaseReplicatedVertex;
+import StreamPartitioning.vertex.Vertex;
 import org.apache.flink.configuration.Configuration;
 import org.apache.flink.streaming.api.functions.source.RichParallelSourceFunction;
 
@@ -52,8 +53,8 @@ public class GraphGenerator extends RichParallelSourceFunction<GraphQuery> {
                 else{
                     // 1. Add as the source
 
-                    BaseReplicatedVertex src = new BaseReplicatedVertex(String.valueOf(srcId));
-                    BaseReplicatedVertex dest = new BaseReplicatedVertex(String.valueOf(value));
+                    BaseReplicatedVertex src = new Vertex(String.valueOf(srcId));
+                    BaseReplicatedVertex dest = new Vertex(String.valueOf(value));
                     Edge edge = new Edge(src,dest);
                     GraphQuery query = new GraphQuery(edge).changeOperation(GraphQuery.OPERATORS.ADD);
                     ctx.collect(query);

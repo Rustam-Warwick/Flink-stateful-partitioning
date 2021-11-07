@@ -7,20 +7,20 @@ import org.apache.flink.statefun.sdk.Context;
 
 import java.util.stream.Stream;
 
-public interface GraphStorage {
+public interface GraphStorage<VT extends BaseReplicatedVertex> {
     // CRUD Related Stuff
-    boolean addVertex(BaseReplicatedVertex v, Context c);
-    void deleteVertex(BaseReplicatedVertex v,Context c);
+    boolean addVertex(VT v, Context c);
+    void deleteVertex(VT v,Context c);
     void updateVertex(Feature f,Context c);
-    void addEdge(Edge e,Context c);
-    void deleteEdge(Edge e,Context c);
-    void updateEdge(Edge e,Context c);
+    void addEdge(Edge<VT> e,Context c);
+    void deleteEdge(Edge<VT> e,Context c);
+    void updateEdge(Edge<VT> e,Context c);
 
     // Query Related Stuff
-    BaseReplicatedVertex getVertex(String id);
-    Stream<BaseReplicatedVertex> getVertices();
-    Stream<Edge> getEdges();
-    Edge getEdge();
+    VT getVertex(String id);
+    Stream<VT> getVertices();
+    Stream<Edge<VT>> getEdges();
+    Edge<VT> getEdge();
 
 
 }

@@ -8,6 +8,7 @@ import StreamPartitioning.sources.GraphGenerator;
 import StreamPartitioning.storage.HashMapGraphStorage;
 import StreamPartitioning.types.GraphQuery;
 import StreamPartitioning.types.Identifiers;
+import StreamPartitioning.vertex.Vertex;
 import org.apache.flink.api.common.typeinfo.Types;
 import org.apache.flink.statefun.flink.core.StatefulFunctionsConfig;
 import org.apache.flink.statefun.flink.core.message.MessageFactoryType;
@@ -50,8 +51,8 @@ public class StreamPartitioning {
                 .withDataStreamAsIngress(ingress)
                 .withFunctionProvider(Identifiers.PARTITIONER_TYPE,(param)->new RandomVertexCutPartitioner().setNUM_PARTS((short)8))
                 .withFunctionProvider(Identifiers.PART_TYPE,(param)->
-                        new SimpleStoragePart()
-                                .setStorage(new HashMapGraphStorage())
+                        new SimpleStoragePart<Vertex>()
+                                .setStorage(new HashMapGraphStorage<Vertex>())
 //                                .attachAggregator(new BaseGNNAggregator())
                                 )
                 .withConfiguration(config)
