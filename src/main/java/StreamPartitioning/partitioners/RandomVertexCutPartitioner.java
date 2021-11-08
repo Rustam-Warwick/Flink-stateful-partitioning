@@ -51,6 +51,9 @@ public class RandomVertexCutPartitioner extends BasePartitioner{
             newEdge.destination.setMasterPart(null);
             masterVertexPart.put(newEdge.destination.getId(),partId);
         }
+        if(newEdge.destination.getId().equals("3")){
+            System.out.format("PARTITIONER %s \n\n\n",partId);
+        }
     }
 
     public void partition(Context c, GraphQuery query){

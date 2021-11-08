@@ -56,11 +56,11 @@ public class GraphGenerator extends RichParallelSourceFunction<GraphQuery> {
                     BaseReplicatedVertex dest = new Vertex(String.valueOf(value));
                     Edge edge = new Edge(src,dest);
                     GraphQuery query = new GraphQuery(edge).changeOperation(GraphQuery.OPERATORS.ADD);
+
                     ctx.collect(query);
                     // 2. Increment data structure
                     edges[value]++;
                     edges[srcId]++;
-                    
                     // 3. Decide if Vertex should be streamed as well
 //                    if(streamVertex(edges[value],pVertexStream)){
 //                        edges[value] = Short.MIN_VALUE;
