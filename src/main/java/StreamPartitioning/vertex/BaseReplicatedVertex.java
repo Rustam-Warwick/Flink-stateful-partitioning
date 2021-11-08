@@ -37,14 +37,18 @@ abstract public class BaseReplicatedVertex extends ReplicableGraphElement implem
 
     @Override
     public void sendMessageToReplicas(Context c,Object msg){
+
         CompletableFuture.allOf(inParts.getValue(),outParts.getValue()).whenComplete((vzoid,err)->{
             try{
+                Short callerId = Short.valueOf(c.caller().id());
+
                 Stream.concat(inParts.getValue().get().stream(),outParts.getValue().get().stream())
                         .distinct()
+                        .filter(item->(item!=null && !item.equals(this.masterPart) && !item.equals(callerId)))
                         .forEach(item->{
-                            if(item==null)return;
                             c.send(Identifiers.PART_TYPE, item.toString(),msg);
                         });
+                c.reply(msg);
             }catch(Exception e){
 
             }
@@ -73,7 +77,7 @@ abstract public class BaseReplicatedVertex extends ReplicableGraphElement implem
         if(e.source.equals(this))updateThis=this.outParts;
         else if(e.destination.equals(this))updateThis=this.inParts;
         if(updateThis!=null){
-            updateThis.add(this.getPart(),c);
+            updateThis.add(this.getPart(),c,true);
         }
     }
     @Override

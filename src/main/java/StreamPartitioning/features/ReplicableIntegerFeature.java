@@ -14,9 +14,6 @@ public class ReplicableIntegerFeature extends ReplicableFeature<Integer[]>{
         this.value[0] = elem[0];
     }
 
-
-
-
     @Override
     public boolean handleNewReplica(Integer[] elem) {
         return false;

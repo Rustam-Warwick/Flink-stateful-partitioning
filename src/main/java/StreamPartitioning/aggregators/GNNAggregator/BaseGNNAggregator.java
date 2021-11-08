@@ -35,7 +35,8 @@ abstract public class BaseGNNAggregator<VT extends BaseReplicatedVertex> extends
                         }
                     }
                 });
-    };
+    }
+
     public CompletableFuture<Object> MESSAGE(Edge<? extends BaseReplicatedVertex> edge,short l){
             Edge<VT> tmp = (Edge) edge;
             CompletableFuture<Object>[] features = new CompletableFuture[]{tmp.source.getFeature(l), tmp.destination.getFeature(l)};
@@ -52,10 +53,11 @@ abstract public class BaseGNNAggregator<VT extends BaseReplicatedVertex> extends
                     }
                 }
             });
-    };
+    }
+
     public CompletableFuture<Object> UPDATE(CompletableFuture<Object> agg,BaseReplicatedVertex vertex,short l){
         return new CompletableFuture<>();
-    };
+    }
     // main Logic Functions
     // Start the AGG by sending AGG_REQ
 

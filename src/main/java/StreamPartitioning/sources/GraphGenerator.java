@@ -8,6 +8,7 @@ import org.apache.flink.configuration.Configuration;
 import org.apache.flink.streaming.api.functions.source.RichParallelSourceFunction;
 
 import java.util.Random;
+import java.util.Timer;
 import java.util.function.IntConsumer;
 
 /**
@@ -31,15 +32,13 @@ public class GraphGenerator extends RichParallelSourceFunction<GraphQuery> {
     public boolean streamVertex(short value,double p){
         if(value>0){
             double coin = Math.random();
-            if(coin <=p){
-                return true;
-            }
+            return coin <= p;
         }
         return false;
     }
     @Override
     public void run(SourceContext<GraphQuery> ctx) throws Exception {
-        short edges[] = new short[N];
+        short[] edges = new short[N];
         double pVertexStream = (double) 1/D;
         random.ints(N*D,0,N).forEach(new IntConsumer() {
             Integer srcId = null;
@@ -61,7 +60,7 @@ public class GraphGenerator extends RichParallelSourceFunction<GraphQuery> {
                     // 2. Increment data structure
                     edges[value]++;
                     edges[srcId]++;
-
+                    
                     // 3. Decide if Vertex should be streamed as well
 //                    if(streamVertex(edges[value],pVertexStream)){
 //                        edges[value] = Short.MIN_VALUE;

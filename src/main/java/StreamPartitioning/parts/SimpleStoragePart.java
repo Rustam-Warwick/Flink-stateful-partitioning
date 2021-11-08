@@ -2,11 +2,13 @@ package StreamPartitioning.parts;
 
 import StreamPartitioning.features.Feature;
 import StreamPartitioning.edges.Edge;
+import StreamPartitioning.features.ReplicableFeature;
 import StreamPartitioning.types.GraphQuery;
 import StreamPartitioning.vertex.BaseReplicatedVertex;
 import StreamPartitioning.vertex.BaseVertex;
 import org.apache.flink.statefun.sdk.Context;
 
+import java.util.ArrayList;
 import java.util.logging.Logger;
 
 /**
@@ -40,12 +42,18 @@ public class SimpleStoragePart<VT extends BaseReplicatedVertex> extends BasePart
                     case REMOVE -> System.out.println("Remove Operation");
                     case SYNC -> {
                         if (isFeature) {
-                            Feature tmp = (Feature) query.element;
+                            ReplicableFeature<ArrayList<Short>> tmp = (ReplicableFeature) query.element;
                             Class<?> clazz = Class.forName(tmp.attachedToClassName);
                             if(BaseReplicatedVertex.class.isAssignableFrom(clazz)){
                                 BaseReplicatedVertex vertex = getStorage().getVertex(tmp.attachedId);
                                 if(vertex==null){
+                                    //StringBuilder values = new StringBuilder();
+                                    // System.out.format("NOT FOUND Part:%s State:%s Value:%s toPart:%s fieldName:%s \n",tmp.part,tmp.replicationState,values,context.self().id(),tmp.fieldName);
                                     return;
+                                }
+                                if(vertex.getId().equals("3")){
+                                    StringBuilder values = new StringBuilder();
+                                    for(Short a: tmp.value) values.append(a.toString()+" ");
                                 }
                                 vertex.updateFeatureCallback(context,tmp);
                             }

@@ -14,9 +14,9 @@ import java.io.IOException;
 
 public class MyKryo implements MessagePayloadSerializer {
 
-    private KryoSerializer<Object> kryo = new KryoSerializer<>(Object.class, new ExecutionConfig());
-    private DataInputDeserializer source = new DataInputDeserializer();
-    private DataOutputSerializer target = new DataOutputSerializer(4096);
+    private final KryoSerializer<Object> kryo = new KryoSerializer<>(Object.class, new ExecutionConfig());
+    private final DataInputDeserializer source = new DataInputDeserializer();
+    private final DataOutputSerializer target = new DataOutputSerializer(4096);
 
     @Override
     public Payload serialize(@Nonnull Object payloadObject) {

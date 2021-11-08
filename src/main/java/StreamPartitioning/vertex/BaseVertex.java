@@ -5,7 +5,7 @@ import StreamPartitioning.features.Feature;
 import org.apache.flink.statefun.sdk.Context;
 
 public interface BaseVertex{
-    abstract public void addEdgeCallback(Edge e, Context c);
-    abstract  public void addVertexCallback(Context c);
-    abstract public void updateFeatureCallback(Context c, Feature f);
+    void addEdgeCallback(Edge e, Context c);
+    void addVertexCallback(Context c);
+    void updateFeatureCallback(Context c, Feature f);
 }

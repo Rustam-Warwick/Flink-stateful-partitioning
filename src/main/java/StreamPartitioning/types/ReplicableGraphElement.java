@@ -4,7 +4,7 @@ import org.apache.flink.statefun.sdk.Context;
 
 abstract public class ReplicableGraphElement extends GraphElement {
     public Short masterPart = -1;
-    public enum STATE {NONE,REPLICA,MASTER};
+    public enum STATE {NONE,REPLICA,MASTER}
 
     public ReplicableGraphElement(){
         super();this.masterPart=-1;
@@ -23,7 +23,9 @@ abstract public class ReplicableGraphElement extends GraphElement {
 
     public abstract void sendMessageToReplicas(Context c, Object msg);
     public void sendMessageToMaster(Context c, Object msg){
-        if(this.getState()==STATE.REPLICA)c.send(Identifiers.PART_TYPE, this.masterPart.toString(), msg);
+        if(this.getState()==STATE.REPLICA){
+            c.send(Identifiers.PART_TYPE, this.masterPart.toString(), msg);
+        }
     }
 
     public STATE getState(){
